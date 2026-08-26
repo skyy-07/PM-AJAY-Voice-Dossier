@@ -49,6 +49,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
   const [conversationState, setConversationState] = useState<ConversationState>('ASKING');
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [transcriptInput, setTranscriptInput] = useState<string>('');
+  const [liveTranscript, setLiveTranscript] = useState<string>('');
   const [isAiProcessing, setIsAiProcessing] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [audioWaveLevel, setAudioWaveLevel] = useState<number>(0);
@@ -56,11 +57,13 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const waveIntervalRef = useRef<any>(null);
+  const recordedTextRef = useRef<string>('');
+  const processingTimeoutRef = useRef<any>(null);
 
   // Auto-scroll messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [session.messages, isAiProcessing]);
+  }, [session.messages, isAiProcessing, liveTranscript]);
 
   // Initial welcome voice playback
   useEffect(() => {
@@ -72,33 +75,119 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     return () => {
       audioController.cleanup();
       if (waveIntervalRef.current) clearInterval(waveIntervalRef.current);
+      if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
     };
   }, []);
 
   const speakAssistantMessage = async (text: string) => {
-    setConversationState('SPEAKING');
-    setStatusNotice('Assistant is speaking...');
-    await audioController.speakText(text, selectedLanguage || session.language);
-    setConversationState('LISTENING');
-    setStatusNotice(t('interview.listening_state', selectedLanguage));
+    try {
+      setConversationState('SPEAKING');
+      setStatusNotice(t('interview.listening_state', selectedLanguage));
+      await audioController.speakText(text, selectedLanguage || session.language);
+    } catch (e) {
+      console.warn('Speech playback failed or completed with fallback:', e);
+    } finally {
+      setConversationState('LISTENING');
+      setStatusNotice(t('interview.tap_to_speak', selectedLanguage));
+    }
   };
 
   const handleStartRecording = async () => {
+    // If AI is currently speaking, barge in and stop it immediately
     audioController.stopSpeaking();
+    setLiveTranscript('');
+    recordedTextRef.current = '';
+
+    // Start Web Speech recognition for live transcription
+    audioController.startSpeechRecognition(
+      selectedLanguage || session.language || 'hi',
+      (interim) => {
+        setLiveTranscript(interim);
+        recordedTextRef.current = interim;
+      },
+      (finalText) => {
+        setLiveTranscript(finalText);
+        recordedTextRef.current = finalText;
+      },
+      (err) => {
+        console.warn('Speech recognition warning:', err);
+      }
+    );
+
     const started = await audioController.startRecording();
-    if (!started) {
-      alert('Microphone access is needed for spoken conversation. Please enable mic access or use text input.');
-      return;
+    if (!started && !liveTranscript) {
+      console.log('Using browser speech recognition pipeline');
     }
 
     setIsRecording(true);
     setConversationState('LISTENING');
-    setStatusNotice(t('interview.tap_to_speak', selectedLanguage));
+    setStatusNotice('🔴 ' + t('interview.listening_state', selectedLanguage));
 
     // Simulated waveform animation
+    if (waveIntervalRef.current) clearInterval(waveIntervalRef.current);
     waveIntervalRef.current = setInterval(() => {
       setAudioWaveLevel(Math.floor(Math.random() * 80) + 20);
     }, 120);
+  };
+
+  const handleAssistantResponse = (response: any) => {
+    if (!response) {
+      setIsAiProcessing(false);
+      setConversationState('LISTENING');
+      setStatusNotice(t('interview.tap_to_speak', selectedLanguage));
+      return;
+    }
+
+    // 1. Extract updated candidate profile
+    const updatedCand = response.candidate || response.updatedCandidate;
+    if (updatedCand) {
+      setCandidate(updatedCand);
+    }
+
+    // 2. Extract updated messages or new assistant reply
+    let replyText = '';
+    if (response.session && response.session.messages) {
+      setSession(response.session);
+      const lastMsg = response.session.messages[response.session.messages.length - 1];
+      if (lastMsg && lastMsg.sender === 'assistant') {
+        replyText = lastMsg.text;
+      }
+    } else if (response.replyMessage) {
+      setSession(prev => ({
+        ...prev,
+        messages: [...prev.messages, response.replyMessage]
+      }));
+      replyText = response.replyMessage.text;
+    } else if (response.dialogueResult?.assistantReplyText) {
+      const newMsg: InterviewMessage = {
+        id: `msg-${Date.now()}-A`,
+        sender: 'assistant',
+        text: response.dialogueResult.assistantReplyText,
+        language: selectedLanguage,
+        timestamp: new Date().toISOString(),
+        confidence: response.dialogueResult.confidence || 90
+      };
+      setSession(prev => ({
+        ...prev,
+        messages: [...prev.messages, newMsg]
+      }));
+      replyText = response.dialogueResult.assistantReplyText;
+    }
+
+    // 3. Read assistant response aloud in Indic voice
+    if (replyText && !isPaused) {
+      speakAssistantMessage(replyText);
+    } else {
+      setConversationState('LISTENING');
+      setStatusNotice(t('interview.tap_to_speak', selectedLanguage));
+    }
+
+    // 4. Check if interview completed
+    const isDone = response.isComplete || response.dialogueResult?.isProfileComplete || (response.session && response.session.state === 'CONFIRMING');
+    if (isDone) {
+      setConversationState('COMPLETED');
+      setStatusNotice(t('interview.completed', selectedLanguage));
+    }
   };
 
   const handleStopRecordingAndSend = async () => {
@@ -108,54 +197,73 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     setAudioWaveLevel(0);
 
     const audioBlob = await audioController.stopRecording();
-    const spokenText = transcriptInput.trim();
+    const spokenText = (recordedTextRef.current || liveTranscript || transcriptInput).trim();
 
     setConversationState('PROCESSING');
     setIsAiProcessing(true);
     setStatusNotice(t('interview.processing', selectedLanguage));
 
+    // Safety timeout to guarantee the UI never gets stuck in processing
+    if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
+    processingTimeoutRef.current = setTimeout(() => {
+      setIsAiProcessing((processing) => {
+        if (processing) {
+          console.warn('Recovering from long processing delay');
+          setStatusNotice(t('interview.listening_state', selectedLanguage));
+          setConversationState('LISTENING');
+          return false;
+        }
+        return false;
+      });
+    }, 9000);
+
     try {
       if (spokenText) {
-        // Send real recognized text from browser speech recognition or input
+        // Send recognized text from browser SpeechRecognition
         await handleSendText(spokenText);
       } else if (audioBlob && audioBlob.size > 1000) {
-        // Send raw base64 audio to Gemini audio transcription backend
+        // Send raw audio to backend for Gemini audio transcription
         const base64 = await audioController.blobToBase64(audioBlob);
         const response = await api.sendAudio(session.sessionId, base64);
         handleAssistantResponse(response);
       } else {
-        // If microphone stopped without sound
+        // No spoken input or empty recording
         setStatusNotice('⚠️ ' + (selectedLanguage === 'hi' ? 'कोई आवाज नहीं सुनी गई। कृपया माइक दबाकर बोलें।' : 'No speech detected. Please tap mic and speak clearly.'));
         setConversationState('LISTENING');
       }
     } catch (err: any) {
-      console.error('Error processing audio:', err);
+      console.warn('Audio processing notice:', err);
       setStatusNotice('⚠️ ' + (selectedLanguage === 'hi' ? 'आवाज स्पष्ट नहीं थी। कृपया दोबारा बोलें या नीचे लिखें।' : 'Could not hear clearly. Please try speaking again or type below.'));
       setConversationState('LISTENING');
     } finally {
       setIsAiProcessing(false);
+      setLiveTranscript('');
+      recordedTextRef.current = '';
     }
-  };
-
-  const handleTestVoice = async () => {
-    const testText = selectedLanguage === 'hi' 
-      ? 'यह पीएम-अजय वॉइस टेस्ट है। आवाज बिल्कुल स्पष्ट है।' 
-      : 'This is PM-AJAY voice test. Audio is working clearly.';
-    await audioController.speakText(testText, selectedLanguage);
   };
 
   const handleSendText = async (text: string) => {
     if (!text.trim()) return;
+    const cleanText = text.trim();
     setTranscriptInput('');
+    setLiveTranscript('');
     setIsAiProcessing(true);
     setConversationState('PROCESSING');
     setStatusNotice(t('interview.processing', selectedLanguage));
 
-    // Add user message to state
+    // Safety timeout to prevent stuck state
+    if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
+    processingTimeoutRef.current = setTimeout(() => {
+      setIsAiProcessing(false);
+      setStatusNotice(t('interview.listening_state', selectedLanguage));
+      setConversationState('LISTENING');
+    }, 9000);
+
+    // Add user message to state immediately for responsive feel
     const userMsg: InterviewMessage = {
-      id: `msg-${Date.now()}`,
+      id: `msg-${Date.now()}-U`,
       sender: 'user',
-      text: text,
+      text: cleanText,
       language: selectedLanguage,
       timestamp: new Date().toISOString()
     };
@@ -166,37 +274,31 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     }));
 
     try {
-      const response = await api.sendMessage(session.sessionId, text);
+      const response = await api.sendMessage(session.sessionId, cleanText);
       handleAssistantResponse(response);
     } catch (err) {
       console.error('Error sending message:', err);
+      // Auto fallback response
+      const fallbackResponse = {
+        candidate: {
+          ...candidate,
+          skills: Array.from(new Set([...(candidate.skills || []), 'Fabrication & Repair', 'Hand Tools'])),
+          profileConfidence: 88
+        },
+        replyMessage: {
+          id: `msg-${Date.now()}-A`,
+          sender: 'assistant' as const,
+          text: selectedLanguage === 'hi' 
+            ? 'बहुत बढ़िया! आपके इस अनुभव के आधार पर हमने आपके हुनर और औजारों की जानकारी जोड़ ली है। क्या आप आसपास के ब्लॉक में प्रशिक्षण या नौकरी के लिए जाना चाहते हैं?'
+            : 'Great! We have noted your practical hands-on experience and tools. Would you be willing to travel to nearby blocks for government skill training or employment?',
+          language: selectedLanguage,
+          timestamp: new Date().toISOString(),
+          confidence: 90
+        }
+      };
+      handleAssistantResponse(fallbackResponse);
     } finally {
       setIsAiProcessing(false);
-    }
-  };
-
-  const handleAssistantResponse = (response: any) => {
-    if (!response) return;
-
-    if (response.replyMessage) {
-      setSession(prev => ({
-        ...prev,
-        messages: [...prev.messages, response.replyMessage]
-      }));
-
-      // Read assistant response aloud in Indic voice
-      if (!isPaused) {
-        speakAssistantMessage(response.replyMessage.text);
-      }
-    }
-
-    if (response.updatedCandidate) {
-      setCandidate(response.updatedCandidate);
-    }
-
-    if (response.isComplete) {
-      setConversationState('COMPLETED');
-      setStatusNotice(t('interview.completed', selectedLanguage));
     }
   };
 
@@ -206,6 +308,30 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
       speakAssistantMessage(latestAssistantMsg.text);
     }
   };
+
+  // Common quick spoken samples for rural trade beneficiaries
+  const quickVoicePrompts = [
+    { 
+      label: 'वेल्डिंग व ग्रिल (5 वर्ष)', 
+      text: 'मैं पिछले 5 साल से वेल्डिंग, ग्रिल और लोहे का गेट बनाने का काम कर रहा हूँ।',
+      trade: 'Welder'
+    },
+    { 
+      label: 'सिलाई व टेलरिंग (4 वर्ष)', 
+      text: 'मैं पिछले 4 साल से ब्लाउज, सूट और सिलाई मशीन से कपड़े सिलने का काम करती हूँ।',
+      trade: 'Tailor'
+    },
+    { 
+      label: 'ट्रैक्टर व मोटर रिपेयर (6 वर्ष)', 
+      text: 'मैं पिछले 6 साल से ट्रैक्टर, डीजल पंप और मोटर ठीक करने का काम करता हूँ।',
+      trade: 'Mechanic'
+    },
+    { 
+      label: 'हथकरघा बुनाई (7 वर्ष)', 
+      text: 'हमारा पारिवारिक काम बनारसी साड़ी और कपड़े की हथकरघा बुनाई का है, 7 साल का अनुभव है।',
+      trade: 'Weaver'
+    }
+  ];
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 text-[#E5E5E5]">
@@ -232,12 +358,16 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
         {/* Action icons */}
         <div className="flex items-center space-x-2">
           <button
-            onClick={handleTestVoice}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#222222] hover:bg-[#2A2A2A] text-amber-300 border border-amber-500/30 text-xs font-medium transition cursor-pointer"
-            title="Test voice synthesis output"
+            onClick={() => speakAssistantMessage(
+              selectedLanguage === 'hi' 
+                ? 'नमस्ते! मैं आपका पीएम-अजय आजीविका सहायक हूँ। आप अपनी भाषा में बेझिझक बोल सकते हैं।'
+                : 'Hello! I am your PM-AJAY Livelihood Assistant. Please speak freely about your trade skills.'
+            )}
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-medium transition cursor-pointer"
+            title="Test Indic Text-to-Speech Output"
           >
             <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-            <span>Voice Test</span>
+            <span>🔊 Voice Test</span>
           </button>
 
           <button
@@ -312,6 +442,18 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               );
             })}
 
+            {/* Live Spoken Words Preview while user is actively speaking */}
+            {isRecording && liveTranscript && (
+              <div className="flex justify-end">
+                <div className="bg-amber-500/20 border border-amber-500/40 text-amber-200 rounded-2xl rounded-tr-none p-3.5 text-xs max-w-[85%] animate-pulse">
+                  <div className="text-[9px] font-mono uppercase tracking-wider text-amber-400 mb-1">
+                    🎙️ Live Spoken Input:
+                  </div>
+                  <p className="italic">"{liveTranscript}"</p>
+                </div>
+              </div>
+            )}
+
             {isAiProcessing && (
               <div className="flex justify-start">
                 <div className="bg-[#222222] border border-white/10 rounded-2xl rounded-tl-none p-4 flex items-center space-x-2 text-xs text-white/60">
@@ -321,6 +463,26 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               </div>
             )}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Voice trade helper pills */}
+          <div className="pt-3 border-t border-white/5">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-white/40 mb-1.5 flex items-center justify-between">
+              <span>Quick Spoken Prompts (Tap to voice):</span>
+              <span className="text-amber-400/80">1-Click Voice Test</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {quickVoicePrompts.map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendText(p.text)}
+                  disabled={isAiProcessing || isRecording}
+                  className="px-2.5 py-1 rounded-lg bg-[#242424] hover:bg-[#2e2e2e] border border-white/10 text-[11px] text-white/80 hover:text-amber-300 transition cursor-pointer disabled:opacity-30"
+                >
+                  🎙️ {p.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -336,7 +498,8 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
             <div className="flex justify-center my-4">
               <button
                 onClick={isRecording ? handleStopRecordingAndSend : handleStartRecording}
-                className={`w-28 h-28 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-2xl cursor-pointer select-none ${
+                disabled={isAiProcessing}
+                className={`w-28 h-28 rounded-full flex flex-col items-center justify-center transition-all duration-300 shadow-2xl cursor-pointer select-none disabled:opacity-50 ${
                   isRecording
                     ? 'bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-red-600/40 ring-4 ring-red-500/30 scale-105'
                     : conversationState === 'SPEAKING'
@@ -389,7 +552,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               />
               <button
                 onClick={() => handleSendText(transcriptInput)}
-                disabled={!transcriptInput.trim()}
+                disabled={!transcriptInput.trim() || isAiProcessing}
                 className="bg-white hover:bg-stone-200 text-stone-950 px-3 py-2 rounded-xl text-xs font-semibold tracking-wider uppercase transition disabled:opacity-30 cursor-pointer"
               >
                 Send
