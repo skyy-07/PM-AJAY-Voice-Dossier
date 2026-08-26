@@ -1,0 +1,6 @@
+{
+  "name": "PM-AJAY Voice Livelihood Assistant",
+  "description": "AI-powered multilingual voice-first skilling and livelihood assistant for PM-AJAY beneficiaries with NSQF mapping, training provider matching, district demand analytics, and offline kiosk capability.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
