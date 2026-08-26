@@ -278,19 +278,27 @@ apiRouter.post('/interviews/:id/audio', async (req: Request, res: Response) => {
   // Run speech pipeline
   await AudioPreprocessor.process(audioBase64 || '');
   const transResult = await SpeechToTextService.transcribe(
-    simulatedText ? `DEMO:${simulatedText}` : 'DEMO:Main pichhle 5 saal se welding aur iron gate fabrication ka kaam karta hoon.',
+    simulatedText ? `DEMO:${simulatedText}` : (audioBase64 || ''),
     session.language as SupportedLanguage
   );
 
+  const cleanTranscript = (transResult.transcript || '').trim();
+  if (!cleanTranscript) {
+    return res.status(400).json({ 
+      error: 'NO_SPEECH_DETECTED', 
+      message: 'No speech was detected in the audio recording. Please speak clearly into your microphone.' 
+    });
+  }
+
   // Send transcription into message processing
-  req.body.text = transResult.transcript;
+  req.body.text = cleanTranscript;
   req.body.audioUrl = '/simulated-audio.wav';
 
   // Process dialogue turn
   const userMsg: InterviewMessage = {
     id: `MSG-${Date.now()}-U`,
     sender: 'user',
-    text: transResult.transcript,
+    text: cleanTranscript,
     audioUrl: req.body.audioUrl,
     language: session.language,
     timestamp: new Date().toISOString(),

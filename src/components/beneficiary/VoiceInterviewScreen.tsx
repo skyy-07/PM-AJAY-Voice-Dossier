@@ -108,20 +108,40 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     setAudioWaveLevel(0);
 
     const audioBlob = await audioController.stopRecording();
+    const spokenText = transcriptInput.trim();
+
     setConversationState('PROCESSING');
     setIsAiProcessing(true);
     setStatusNotice(t('interview.processing', selectedLanguage));
 
     try {
-      const response = await api.sendAudio(session.sessionId, undefined, 'Main 5 saal se gaon mein welding aur pipe fitting ka kaam karta hoon.');
-      handleAssistantResponse(response);
-    } catch (err) {
-      console.error('Error processing spoken voice:', err);
-      // Fallback response if audio transcription mock fails
-      handleSendText('Main 5 saal se gaon mein welding aur pipe fitting ka kaam karta hoon.');
+      if (spokenText) {
+        // Send real recognized text from browser speech recognition or input
+        await handleSendText(spokenText);
+      } else if (audioBlob && audioBlob.size > 1000) {
+        // Send raw base64 audio to Gemini audio transcription backend
+        const base64 = await audioController.blobToBase64(audioBlob);
+        const response = await api.sendAudio(session.sessionId, base64);
+        handleAssistantResponse(response);
+      } else {
+        // If microphone stopped without sound
+        setStatusNotice('⚠️ ' + (selectedLanguage === 'hi' ? 'कोई आवाज नहीं सुनी गई। कृपया माइक दबाकर बोलें।' : 'No speech detected. Please tap mic and speak clearly.'));
+        setConversationState('LISTENING');
+      }
+    } catch (err: any) {
+      console.error('Error processing audio:', err);
+      setStatusNotice('⚠️ ' + (selectedLanguage === 'hi' ? 'आवाज स्पष्ट नहीं थी। कृपया दोबारा बोलें या नीचे लिखें।' : 'Could not hear clearly. Please try speaking again or type below.'));
+      setConversationState('LISTENING');
     } finally {
       setIsAiProcessing(false);
     }
+  };
+
+  const handleTestVoice = async () => {
+    const testText = selectedLanguage === 'hi' 
+      ? 'यह पीएम-अजय वॉइस टेस्ट है। आवाज बिल्कुल स्पष्ट है।' 
+      : 'This is PM-AJAY voice test. Audio is working clearly.';
+    await audioController.speakText(testText, selectedLanguage);
   };
 
   const handleSendText = async (text: string) => {
@@ -211,6 +231,15 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
 
         {/* Action icons */}
         <div className="flex items-center space-x-2">
+          <button
+            onClick={handleTestVoice}
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#222222] hover:bg-[#2A2A2A] text-amber-300 border border-amber-500/30 text-xs font-medium transition cursor-pointer"
+            title="Test voice synthesis output"
+          >
+            <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+            <span>Voice Test</span>
+          </button>
+
           <button
             onClick={handleRepeatQuestion}
             className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-[#222222] hover:bg-[#2A2A2A] text-white/80 border border-white/10 text-xs font-medium transition cursor-pointer"
