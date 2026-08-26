@@ -9,7 +9,7 @@ Built for **Smart India Hackathon (SIH)** — Ministry of Social Justice & Empow
 ## How It Works
 
 1. **Listens** — Speech-to-text via IndicWhisper / Bhashini ASR (12 languages + dialects)
-2. **Understands** — Gemini AI extracts structured livelihood slots (skills, tools, experience, RPL signals) from spoken input
+2. **Understands** — Gemini AI extracts structured livelihood slots (skills, tools, experience, RPL signals) from spoken input(Later we will be using our own NLP)
 3. **Matches** — Multi-factor NSQF engine scores Qualification Packs against skills, local demand, mobility, and enterprise potential
 4. **Recommends** — Delivers personalised training, RPL certification, and career pathways in the beneficiary's language
 5. **Escalates** — Routes complex cases to district officers with full context
@@ -17,10 +17,9 @@ Built for **Smart India Hackathon (SIH)** — Ministry of Social Justice & Empow
 ### Delivery Channels
 
 - **Toll-Free Voice Call** — Asterisk/FreeSWITCH SIP gateway
-- **WhatsApp Voice Notes** — WhatsApp Business API integration
+- **WhatsApp Voice Notes** — WhatsApp Business API integration[Not yet integrated]
 - **Panchayat Kiosk** — Offline-capable with IndexedDB and batch sync
 - **Web Browser** — Full voice interview with Web Speech API fallback
-
 ---
 
 ## Tech Stack
