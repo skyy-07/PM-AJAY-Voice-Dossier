@@ -234,7 +234,7 @@ export const OfflineKioskScreen: React.FC = () => {
                   Local Kiosk Storage Queue
                 </h3>
               </div>
-              <span className="bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[10px] px-2.5 py-0.5 rounded">
+              <span className="bg-amber-500/10 border border-amber-500/30 text-amber-700 font-mono text-[10px] px-2.5 py-0.5 rounded">
                 {offlineQueue.length} Pending
               </span>
             </div>
@@ -261,7 +261,7 @@ export const OfflineKioskScreen: React.FC = () => {
                     <div className="text-white/60 font-light">
                       Trade: <span className="font-medium text-white/90">{item.payload.trade}</span> ({item.payload.experienceYears} yrs)
                     </div>
-                    <div className="flex justify-between items-center text-[10px] text-white/40 pt-1 border-t border-white/5 font-mono">
+                    <div className="flex justify-between items-center text-[10px] text-amber-400 pt-1 border-t border-white/5 font-mono">
                       <span>{item.payload.village}</span>
                       <span className="flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
@@ -279,8 +279,8 @@ export const OfflineKioskScreen: React.FC = () => {
               disabled={offlineQueue.length === 0 || isSyncing}
               className={`mt-5 w-full py-3.5 rounded-xl font-semibold text-xs tracking-wider uppercase shadow-xl flex items-center justify-center space-x-2 transition cursor-pointer ${
                 offlineQueue.length === 0
-                  ? 'bg-[#222222] text-white/20 border border-white/5 cursor-not-allowed'
-                  : 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20'
+                  ? 'bg-[#222222dc] text-amber-400 border border-white/5 cursor-not-allowed'
+                  : 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/40'
               }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />

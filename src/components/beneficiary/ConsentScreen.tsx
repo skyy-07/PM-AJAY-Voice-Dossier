@@ -30,13 +30,13 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       <button 
         onClick={onBack}
-        className="flex items-center space-x-2 text-white/50 hover:text-white text-xs tracking-wider uppercase font-medium mb-6 transition cursor-pointer"
+        className="group flex items-center space-x-2 text-white/50 hover:text-white text-xs tracking-wider uppercase font-medium mb-6 transition-colors cursor-pointer rounded-md px-1 py-1 -ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/60"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
         <span>{t('consent.back', selectedLanguage)}</span>
       </button>
 
-      <div className="bg-[#181818] rounded-2xl p-6 sm:p-9 border border-white/10 shadow-2xl">
+      <div className="bg-[#181818] rounded-2xl p-6 sm:p-9 border border-white/10 shadow-2xl shadow-black/40">
         {/* Header Icon */}
         <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mb-6 mx-auto">
           <ShieldCheck className="w-8 h-8" />
@@ -55,11 +55,11 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         </div>
 
         {/* Spoken Audio Banner */}
-        <div className="bg-[#202020] border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
+        <div className="bg-[#202020] border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4 mt-6">
           <div className="flex items-center space-x-3.5">
             <button
               onClick={handlePlayAudio}
-              className={`w-11 h-11 rounded-lg flex items-center justify-center text-white transition cursor-pointer ${
+              className={`w-11 h-11 shrink-0 rounded-lg flex items-center justify-center text-white transition cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#202020] ${
                 isPlayingAudio ? 'bg-amber-600 animate-pulse' : 'bg-amber-600 hover:bg-amber-500'
               }`}
               title="Hear consent in selected language"
@@ -72,7 +72,7 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
                   ? t('consent.audio_broadcasting', selectedLanguage) 
                   : t('consent.audio_banner', selectedLanguage)}
               </div>
-              <div className="text-[11px] text-white/50">
+              <div className="text-[11px] text-white/50 mt-0.5">
                 {t('consent.audio_sub', selectedLanguage)}
               </div>
             </div>
@@ -102,12 +102,12 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
         </div>
 
         {/* Checkbox */}
-        <label className="mt-6 flex items-start space-x-3 cursor-pointer select-none bg-[#202020] p-4 rounded-xl border border-white/5">
+        <label className="mt-6 flex items-start space-x-3 cursor-pointer select-none bg-[#202020] p-4 rounded-xl border border-white/5 transition-colors hover:border-white/15">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 w-4 h-4 accent-amber-500 rounded border-white/20 focus:ring-amber-500 cursor-pointer"
+            className="mt-0.5 w-4 h-4 accent-amber-500 rounded border-white/20 focus-visible:ring-2 focus-visible:ring-amber-500/70 cursor-pointer"
           />
           <span className="text-xs font-normal text-white/90 leading-relaxed">
             {t('consent.agree_label', selectedLanguage)}
@@ -120,9 +120,9 @@ export const ConsentScreen: React.FC<ConsentScreenProps> = ({
             if (agreed) onConsentGiven();
           }}
           disabled={!agreed}
-          className={`mt-8 w-full py-4 rounded-xl font-semibold text-xs tracking-wider uppercase shadow-xl flex items-center justify-center space-x-2 transition cursor-pointer ${
+          className={`mt-8 w-full py-4 rounded-xl font-semibold text-xs tracking-wider uppercase shadow-xl flex items-center justify-center space-x-2 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#181818] ${
             agreed 
-              ? 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20 hover:scale-[1.01]' 
+              ? 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20 hover:scale-[1.01] active:scale-[0.99]' 
               : 'bg-[#222222] text-white/20 border border-white/5 cursor-not-allowed'
           }`}
         >
