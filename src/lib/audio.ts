@@ -27,6 +27,8 @@ export class AudioController {
   private speechTimeout: any = null;
   private voices: SpeechSynthesisVoice[] = [];
   private audioContext: AudioContext | null = null;
+  private analyserNode: AnalyserNode | null = null;
+  private mediaSourceNode: MediaStreamAudioSourceNode | null = null;
 
   constructor() {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -220,6 +222,7 @@ export class AudioController {
 
       this.audioChunks = [];
       try {
+        this.setupAnalyser();
         this.mediaRecorder = new MediaRecorder(this.stream!);
       } catch (e) {
         console.warn('MediaRecorder init failed, fallback:', e);
@@ -391,9 +394,67 @@ export class AudioController {
     this.notifyListeners();
   }
 
+  public getStream(): MediaStream | null {
+    return this.stream;
+  }
+
+  public getAudioContext(): AudioContext | null {
+    return this.audioContext;
+  }
+
+  public getAnalyserNode(): AnalyserNode | null {
+    return this.analyserNode;
+  }
+
+  public setupAnalyser(): AnalyserNode | null {
+    try {
+      if (!this.stream) return null;
+      
+      if (!this.audioContext) {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) this.audioContext = new AudioCtx();
+      }
+      if (!this.audioContext) return null;
+
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+
+      if (!this.analyserNode) {
+        this.analyserNode = this.audioContext.createAnalyser();
+        this.analyserNode.fftSize = 256;
+        this.analyserNode.smoothingTimeConstant = 0.8;
+      }
+
+      if (this.mediaSourceNode) {
+        try {
+          this.mediaSourceNode.disconnect();
+        } catch {
+          // ignore
+        }
+      }
+
+      this.mediaSourceNode = this.audioContext.createMediaStreamSource(this.stream);
+      this.mediaSourceNode.connect(this.analyserNode);
+
+      return this.analyserNode;
+    } catch (e) {
+      console.warn('Could not setup Web Audio AnalyserNode:', e);
+      return null;
+    }
+  }
+
   public cleanup(): void {
     this.stopSpeaking();
     this.stopSpeechRecognition();
+    if (this.mediaSourceNode) {
+      try {
+        this.mediaSourceNode.disconnect();
+      } catch {
+        // ignore
+      }
+      this.mediaSourceNode = null;
+    }
     if (this.stream) {
       try {
         this.stream.getTracks().forEach((track) => track.stop());

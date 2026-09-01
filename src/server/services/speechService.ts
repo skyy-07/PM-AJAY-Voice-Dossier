@@ -1,12 +1,17 @@
-import { GoogleGenAI } from '@google/genai';
 import { SupportedLanguage } from '../../types.js';
+import { GoogleGenAI } from '@google/genai';
 
 let aiClient: GoogleGenAI | null = null;
+
 function getGenAI(): GoogleGenAI | null {
   if (!aiClient && process.env.GEMINI_API_KEY) {
     aiClient = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY,
-      httpOptions: { headers: { 'User-Agent': 'aistudio-build' } },
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        },
+      },
     });
   }
   return aiClient;
@@ -53,7 +58,6 @@ export interface SpeechSynthesisResult {
 // 1. Audio Preprocessor
 export class AudioPreprocessor {
   public static async process(audioBufferOrBase64: string | Buffer): Promise<AudioPreprocessingResult> {
-    // Simulates noise suppression filter, voice activity detection & peak normalization
     return {
       durationSeconds: 4.2,
       snrEstimateDb: 22.4,
@@ -93,7 +97,6 @@ export class LanguageDetectionService {
       return { detectedLanguage: 'or', detectedDialect: 'Sambalpuri / Coastal Odia', confidence: 92, model: 'IndicLID-v2' };
     }
 
-    // Default to Hindi / Bhojpuri
     return {
       detectedLanguage: 'hi',
       detectedDialect: 'Bhojpuri / Standard Hindi',
@@ -103,7 +106,7 @@ export class LanguageDetectionService {
   }
 }
 
-// 3. Speech to Text (IndicWhisper / IndicConformer Adapter & Gemini Audio STT)
+// 3. Speech to Text (Gemini Audio & Indic Speech Pipeline)
 export class SpeechToTextService {
   public static async transcribe(
     audioPayload: string,
@@ -111,6 +114,7 @@ export class SpeechToTextService {
   ): Promise<TranscriptionResult> {
     const start = Date.now();
 
+    // If explicit transcript or simulation tag was sent:
     if (audioPayload.startsWith('DEMO:')) {
       return {
         transcript: audioPayload.replace('DEMO:', '').trim(),
@@ -121,7 +125,7 @@ export class SpeechToTextService {
       };
     }
 
-    // Real multimodal audio transcription using Gemini
+    // If raw base64 audio is provided, use Gemini Multimodal Audio transcription
     const ai = getGenAI();
     if (ai && audioPayload && audioPayload.length > 200) {
       try {
@@ -155,6 +159,7 @@ Return ONLY the transcribed text. Do not add explanations or formatting.`
       }
     }
 
+    // Clean fallback if no words were detected in audio
     return {
       transcript: audioPayload && !audioPayload.startsWith('data:') ? audioPayload : '',
       confidence: 80.0,

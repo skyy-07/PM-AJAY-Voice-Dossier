@@ -112,6 +112,15 @@ Analyze the user's latest response.
 Extract any newly revealed slots (name, age, village, district, state, education, currentOccupation, familyOccupation, skills, tools, years of experience, interests, aspirations, employment preference, mobility constraints).
 Determine the next single, empathetic follow-up question to ask in ${language} to fill remaining missing key slots, OR if enough information (skills, occupation, location, mobility, interest) is gathered, invite the user to review their profile summary.`;
 
+    const withTimeout = <T>(promise: Promise<T>, timeoutMs: number = 6000): Promise<T> => {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('AI generation timeout')), timeoutMs)
+        ),
+      ]);
+    };
+
     // Cascade list of models to try in case of temporary 503 spikes in demand
     const modelsToTry = ['gemini-3.7-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
 
@@ -120,18 +129,21 @@ Determine the next single, empathetic follow-up question to ask in ${language} t
       for (let attempt = 0; attempt < 2; attempt++) {
         try {
           if (attempt > 0) {
-            await sleep(400 * attempt);
+            await sleep(300 * attempt);
           }
 
-          const response = await ai.models.generateContent({
-            model: modelName,
-            contents: prompt,
-            config: {
-              systemInstruction: SYSTEM_INSTRUCTION,
-              responseMimeType: 'application/json',
-              responseSchema: RESPONSE_SCHEMA
-            }
-          });
+          const response = await withTimeout(
+            ai.models.generateContent({
+              model: modelName,
+              contents: prompt,
+              config: {
+                systemInstruction: SYSTEM_INSTRUCTION,
+                responseMimeType: 'application/json',
+                responseSchema: RESPONSE_SCHEMA
+              }
+            }),
+            5500
+          );
 
           const rawText = response.text || '{}';
           const parsed = JSON.parse(rawText);

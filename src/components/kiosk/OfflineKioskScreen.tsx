@@ -31,14 +31,62 @@ export const OfflineKioskScreen: React.FC = () => {
       setIsRecording(false);
       await audioController.stopRecording();
 
+      const candidateId = `BEN-KIOSK-${Date.now().toString().slice(-4)}`;
+      const candidate: CandidateProfile = {
+        candidateId,
+        name: activeCandidateName || 'Kiosk Beneficiary',
+        phone: '+91 98765 ' + Math.floor(10000 + Math.random() * 90000),
+        age: 28,
+        gender: 'unspecified',
+        location: {
+          village: 'Pipri Gram Panchayat',
+          district: 'Varanasi',
+          state: 'Uttar Pradesh',
+          latitude: 25.3176,
+          longitude: 82.9739
+        },
+        language: 'hi',
+        currentOccupation: activeTrade || 'Masonry & Plastering',
+        previousOccupations: [],
+        familyOccupation: 'Rural Construction',
+        skills: [activeTrade || 'Masonry & Plastering', 'Rural Construction'],
+        tools: ['Trowel', 'Plumb Bob', 'Spirit Level'],
+        experience: [{
+          tradeOrActivity: activeTrade || 'Masonry & Plastering',
+          yearsOfExperience: 5,
+          isFamilyOccupation: false,
+          informalOrFormal: 'informal',
+          description: 'Rural masonry and plastering'
+        }],
+        incomeSources: ['Daily construction wages'],
+        seasonalWork: [],
+        interests: ['Masonry Certification', 'PM-AJAY Tool Kit'],
+        aspirations: ['Contractor License'],
+        employmentPreference: 'both',
+        selfEmploymentInterest: true,
+        education: '8th Standard',
+        literacyLevel: 'basic_literacy',
+        mobility: { willingToTravel: true, maxDistanceKm: 15, willingToMigrate: false },
+        physicalConstraints: [],
+        familyConstraints: [],
+        priorTrainingHistory: [],
+        rplSignals: ['5 years practical masonry experience'],
+        profileConfidence: 92,
+        missingFields: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isConfirmed: true
+      };
+
       // Add to offline queue
       const newRecord: SyncQueueRecord = {
         id: `OFF-${Date.now().toString().slice(-4)}`,
-        candidateId: `BEN-KIOSK-${Date.now().toString().slice(-3)}`,
+        candidateId,
         action: 'NEW_ASSESSMENT',
+        candidate,
         payload: {
-          name: activeCandidateName || 'Kiosk Beneficiary',
-          trade: activeTrade || 'Masonry & Plastering',
+          name: candidate.name,
+          trade: candidate.currentOccupation,
           village: 'Pipri Gram Panchayat',
           experienceYears: 5
         },

@@ -76,7 +76,14 @@ export class InMemoryStore {
     this.auditLogs = [...INITIAL_AUDIT_LOGS];
 
     this.candidates.clear();
+    for (const b of INITIAL_BENEFICIARIES) {
+      this.candidates.set(b.candidateId, { ...b });
+    }
+
     this.escalations.clear();
+    for (const e of INITIAL_ESCALATIONS) {
+      this.escalations.set(e.id, { ...e });
+    }
   }
 
   // Users

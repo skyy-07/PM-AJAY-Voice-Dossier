@@ -7,13 +7,12 @@ import { apiRouter } from './src/server/api.js';
 
 dotenv.config();
 
-// CJS-safe: __dirname is a global in CJS bundles, only use import.meta.url in ESM (tsx dev)
-const __filename_resolved = typeof __filename !== 'undefined' ? __filename : fileURLToPath(import.meta.url);
-const __dirname_resolved = typeof __dirname !== 'undefined' ? __dirname : path.dirname(__filename_resolved);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 async function startServer() {
   const app = express();
-  const PORT = parseInt(process.env.PORT || '3000', 10);
+  const PORT = 3000;
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));

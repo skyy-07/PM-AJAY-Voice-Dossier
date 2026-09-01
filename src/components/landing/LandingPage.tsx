@@ -11,7 +11,8 @@ import {
   ArrowRight,
   CheckCircle2,
   Cpu,
-  Volume2
+  Volume2,
+  Smartphone
 } from 'lucide-react';
 import { SupportedLanguage } from '../../types.js';
 import { t } from '../../lib/translations.js';
@@ -23,23 +24,49 @@ interface LandingPageProps {
   onOpenWhatsApp: () => void;
   onOpenKiosk: () => void;
   onOpenAdmin: () => void;
+  onOpenMobile?: () => void;
   onSelectSample: (sampleType: 'welder' | 'tailor' | 'tractor' | 'weaver') => void;
   selectedLanguage: SupportedLanguage;
+  onSelectLanguage?: (lang: SupportedLanguage) => void;
+  hasGivenConsent?: boolean;
+  onToggleConsent?: (granted: boolean) => void;
 }
+
+const TOP_LANGUAGES: { code: SupportedLanguage; name: string; native: string }[] = [
+  { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+  { code: 'bn', name: 'Bengali', native: 'বাংলা' },
+  { code: 'mr', name: 'Marathi', native: 'मराठी' },
+  { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
+  { code: 'te', name: 'Telugu', native: 'తెలుగు' },
+  { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+  { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
+  { code: 'en', name: 'English', native: 'English' },
+  { code: 'auto', name: 'Auto Detect', native: '⚡ Auto' }
+];
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onStartVoice,
   onOpenWhatsApp,
   onOpenKiosk,
   onOpenAdmin,
+  onOpenMobile,
   onSelectSample,
-  selectedLanguage
+  selectedLanguage,
+  onSelectLanguage,
+  hasGivenConsent = false,
+  onToggleConsent
 }) => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   const readCardAloud = (text: string) => {
     audioController.speakText(text, selectedLanguage);
+  };
+
+  const handleLanguageClick = (langCode: SupportedLanguage) => {
+    if (onSelectLanguage) {
+      onSelectLanguage(langCode);
+    }
   };
 
   return (
@@ -93,45 +120,64 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 Talk to our voice assistant in your language and discover skilling and livelihood opportunities suited to your experience.
               </p>
 
-              {/* Action Buttons Row matching screenshot */}
-              <div className="pt-2 flex flex-wrap items-center gap-3.5">
-                {/* Primary Button */}
+              {/* Action Buttons Row matching mobile-first layout */}
+              <div className="pt-2 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3.5">
+                {/* Primary Button - Full width on mobile for thumb reach */}
                 <button
                   id="hero-talk-btn"
                   onClick={onStartVoice}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center space-x-2.5 text-base transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-6 sm:px-7 py-4 sm:py-3.5 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center space-x-2.5 text-base transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer min-h-[48px]"
                 >
-                  <Mic className="w-5 h-5 text-white" />
+                  <Mic className="w-5 h-5 text-white animate-pulse" />
                   <span>Talk to the Assistant</span>
                 </button>
 
-                {/* Voice Note Button */}
-                <button
-                  id="hero-voicenote-btn"
-                  onClick={onOpenWhatsApp}
-                  className={`font-semibold px-5 py-3.5 rounded-2xl border backdrop-blur-md flex items-center space-x-2 text-sm transition-all duration-200 transform hover:scale-[1.02] cursor-pointer ${
-                    isDark 
-                      ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white' 
-                      : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-xs'
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4 text-emerald-400" />
-                  <span>Voice Note</span>
-                </button>
+                {/* Secondary Actions Grid for Mobile */}
+                <div className="grid grid-cols-3 sm:flex sm:items-center gap-2 sm:gap-3">
+                  {/* Voice Note Button */}
+                  <button
+                    id="hero-voicenote-btn"
+                    onClick={onOpenWhatsApp}
+                    className={`font-semibold px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border backdrop-blur-md flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm transition-all duration-200 active:scale-95 cursor-pointer min-h-[48px] ${
+                      isDark 
+                        ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white' 
+                        : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-xs'
+                    }`}
+                  >
+                    <MessageSquare className="w-4 h-4 text-emerald-400" />
+                    <span>WhatsApp</span>
+                  </button>
 
-                {/* Kiosk Button */}
-                <button
-                  id="hero-kiosk-btn"
-                  onClick={onOpenKiosk}
-                  className={`font-semibold px-5 py-3.5 rounded-2xl border backdrop-blur-md flex items-center space-x-2 text-sm transition-all duration-200 transform hover:scale-[1.02] cursor-pointer ${
-                    isDark 
-                      ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white' 
-                      : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-xs'
-                  }`}
-                >
-                  <Monitor className="w-4 h-4 text-sky-400" />
-                  <span>Kiosk</span>
-                </button>
+                  {/* Kiosk Button */}
+                  <button
+                    id="hero-kiosk-btn"
+                    onClick={onOpenKiosk}
+                    className={`font-semibold px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border backdrop-blur-md flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm transition-all duration-200 active:scale-95 cursor-pointer min-h-[48px] ${
+                      isDark 
+                        ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white' 
+                        : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-xs'
+                    }`}
+                  >
+                    <Monitor className="w-4 h-4 text-sky-400" />
+                    <span>Kiosk</span>
+                  </button>
+
+                  {/* Mobile App Button */}
+                  {onOpenMobile && (
+                    <button
+                      id="hero-mobile-btn"
+                      onClick={onOpenMobile}
+                      className={`font-semibold px-3 sm:px-5 py-3 sm:py-3.5 rounded-2xl border backdrop-blur-md flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 text-xs sm:text-sm transition-all duration-200 active:scale-95 cursor-pointer min-h-[48px] ${
+                        isDark 
+                          ? 'bg-indigo-500/20 hover:bg-indigo-500/30 border-indigo-500/40 text-indigo-200' 
+                          : 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-900 shadow-xs'
+                      }`}
+                    >
+                      <Smartphone className="w-4 h-4 text-indigo-400" />
+                      <span>App UX</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Localized Audio Trigger Tip */}
@@ -175,38 +221,40 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 {/* Central Microphone Orb */}
                 <div 
                   onClick={onStartVoice}
-                  className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center relative shadow-2xl transition-transform hover:scale-105 cursor-pointer backdrop-blur-md border-2 ${
+                  className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center relative shadow-2xl transition-transform hover:scale-105 cursor-pointer backdrop-blur-md border-2 group ${
                     isDark 
                       ? 'bg-white/10 border-white/30 text-white shadow-blue-500/20' 
                       : 'bg-blue-600/10 border-blue-500/40 text-blue-600 shadow-blue-500/30'
                   }`}
+                  title="Click to start voice session"
                 >
-                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center ${
                     isDark ? 'bg-white/15' : 'bg-blue-600'
                   }`}>
-                    <Mic className={`w-10 h-10 ${isDark ? 'text-white' : 'text-white'}`} />
+                    <Mic className="w-9 h-9 text-white mb-0.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-[9px] font-bold text-white/90 uppercase tracking-wider">Start</span>
                   </div>
                 </div>
               </div>
 
-              {/* Animated Live Audio Equalizer Waveform */}
+              {/* Static Audio Indicator in Ready / Standby State */}
               <div className="mt-4 flex flex-col items-center space-y-2">
-                <div className="flex items-center space-x-1.5 h-8">
-                  <span className="w-1.5 bg-blue-400/80 rounded-full animate-eq-1"></span>
-                  <span className="w-1.5 bg-blue-400/90 rounded-full animate-eq-2"></span>
-                  <span className="w-1.5 bg-white rounded-full animate-eq-3"></span>
-                  <span className="w-1.5 bg-blue-300 rounded-full animate-eq-4"></span>
-                  <span className="w-1.5 bg-orange-400 rounded-full animate-eq-5"></span>
-                  <span className="w-1.5 bg-blue-400 rounded-full animate-eq-6"></span>
-                  <span className="w-1.5 bg-blue-300/90 rounded-full animate-eq-7"></span>
-                  <span className="w-1.5 bg-blue-400/70 rounded-full animate-eq-8"></span>
+                <div className="flex items-center space-x-1.5 h-6 opacity-60">
+                  <span className="w-1.5 h-2 bg-blue-400/80 rounded-full"></span>
+                  <span className="w-1.5 h-3 bg-blue-400/90 rounded-full"></span>
+                  <span className="w-1.5 h-4 bg-white rounded-full"></span>
+                  <span className="w-1.5 h-5 bg-blue-300 rounded-full"></span>
+                  <span className="w-1.5 h-4 bg-orange-400 rounded-full"></span>
+                  <span className="w-1.5 h-5 bg-blue-400 rounded-full"></span>
+                  <span className="w-1.5 h-3 bg-blue-300/90 rounded-full"></span>
+                  <span className="w-1.5 h-2 bg-blue-400/70 rounded-full"></span>
                 </div>
 
                 <div className={`flex items-center space-x-2 text-xs font-medium ${
                   isDark ? 'text-slate-300' : 'text-slate-600'
                 }`}>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Listening in your language...</span>
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <span>Microphone in Standby &bull; Tap Start to Speak</span>
                 </div>
               </div>
 

@@ -315,6 +315,7 @@ export interface AuditLog {
 export interface SyncQueueRecord {
   id: string;
   candidateId?: string;
+  candidate?: CandidateProfile;
   clientSessionId?: string;
   payloadType?: string;
   action?: string;

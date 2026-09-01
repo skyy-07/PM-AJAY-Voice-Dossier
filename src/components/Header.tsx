@@ -13,7 +13,8 @@ import {
   Volume2,
   VolumeX,
   Layers,
-  StopCircle
+  StopCircle,
+  Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SupportedLanguage, UserRole } from '../types.js';
@@ -89,6 +90,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   // Active channel determination
   const getActiveTab = (): string => {
+    if (currentView === 'mobile') return 'mobile';
     if (currentView.startsWith('admin')) return 'admin';
     if (currentView === 'whatsapp') return 'whatsapp';
     if (currentView === 'kiosk') return 'kiosk';
@@ -99,8 +101,19 @@ export const Header: React.FC<HeaderProps> = ({
 
   const channels: NavChannelItem[] = [
     {
+      id: 'mobile',
+      view: 'mobile',
+      labelKey: 'header.mobile_ux',
+      description: '7-screen mobile UX flow with TalkBack and voice controls',
+      icon: Smartphone,
+      badge: 'Mobile App',
+      accentBg: 'bg-indigo-500/10',
+      accentText: 'text-indigo-400',
+      accentBorder: 'border-indigo-500/30'
+    },
+    {
       id: 'beneficiary',
-      view: 'landing',
+      view: 'beneficiary_interview',
       labelKey: 'header.spoken_intake',
       description: 'Dialect-aware conversational voice intake & live AI extraction',
       icon: Mic,
@@ -215,8 +228,8 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Center: THE CHANNEL DROPBOX SELECTOR */}
-        <div className="relative" ref={channelDropdownRef}>
+        {/* Center: THE CHANNEL DROPBOX SELECTOR (hidden on mobile, handled by bottom bar) */}
+        <div className="relative hidden md:block" ref={channelDropdownRef}>
           <button
             onClick={() => setIsChannelDropdownOpen(!isChannelDropdownOpen)}
             className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl border font-medium text-xs transition-all duration-150 cursor-pointer shadow-xs ${
@@ -311,12 +324,28 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Controls: Streamlined Toolbar */}
-        <div className="flex items-center space-x-1.5 sm:space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           
+          {/* Quick 7-Screen Mobile UX Button (visible on md+) */}
+          <button
+            onClick={() => onSelectView('mobile')}
+            className={`hidden md:flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-xs ${
+              currentView === 'mobile'
+                ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/20 ring-2 ring-indigo-400'
+                : isDark
+                  ? 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border-indigo-500/40'
+                  : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-indigo-200'
+            }`}
+            title="Open 7-Screen Mobile App UX (PDF Design)"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span className="text-[11px] uppercase tracking-wider">Mobile UX</span>
+          </button>
+
           {/* Quick TalkBack Read Aloud Button */}
           <button
             onClick={handleReadAloud}
-            className={`p-2 rounded-xl border transition-colors duration-150 cursor-pointer flex items-center justify-center ${
+            className={`p-2 rounded-xl border transition-colors duration-150 cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] ${
               isSpeaking
                 ? 'bg-amber-500 text-slate-950 border-amber-400 animate-pulse'
                 : isDark
@@ -332,7 +361,7 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Theme Toggle Button */}
           <button
             onClick={toggleTheme}
-            className={`p-2 rounded-xl border transition-colors duration-150 cursor-pointer flex items-center justify-center ${
+            className={`p-2 rounded-xl border transition-colors duration-150 cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] ${
               isDark
                 ? 'bg-[#101b38] border-white/10 text-amber-400 hover:bg-white/5'
                 : 'bg-slate-100 border-slate-200 text-indigo-600 hover:bg-slate-200/70'
@@ -344,17 +373,17 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
 
           {/* Language Compact Dropdown */}
-          <div className={`relative flex items-center border rounded-xl px-2 py-1.5 text-xs transition-colors duration-150 ${
+          <div className={`relative flex items-center border rounded-xl px-2 py-1.5 text-xs transition-colors duration-150 min-h-[36px] ${
             isDark 
               ? 'bg-[#101b38] border-white/10 text-white hover:border-white/20' 
               : 'bg-slate-100 border-slate-200 text-slate-800 hover:border-slate-300'
           }`}>
-            <Globe className="w-3.5 h-3.5 text-orange-500 mr-1.5 shrink-0 opacity-90" />
+            <Globe className="w-3.5 h-3.5 text-orange-500 mr-1 shrink-0 opacity-90" />
             <select
               value={selectedLanguage}
               onChange={(e) => onSelectLanguage(e.target.value as SupportedLanguage)}
               aria-label="Select preferred language"
-              className={`bg-transparent font-medium text-xs focus:outline-hidden cursor-pointer pr-4 appearance-none ${
+              className={`bg-transparent font-medium text-xs focus:outline-hidden cursor-pointer pr-3.5 appearance-none max-w-[65px] sm:max-w-none ${
                 isDark ? 'text-white' : 'text-slate-800'
               }`}
             >
@@ -372,13 +401,13 @@ export const Header: React.FC<HeaderProps> = ({
               <option value="en" className={isDark ? 'bg-[#0b1329] text-white' : 'bg-white text-slate-900'}>English</option>
               <option value="auto" className={isDark ? 'bg-[#0b1329] text-white' : 'bg-white text-slate-900'}>⚡ Auto</option>
             </select>
-            <ChevronDown className="w-3 h-3 opacity-50 absolute right-1.5 pointer-events-none" />
+            <ChevronDown className="w-3 h-3 opacity-50 absolute right-1 pointer-events-none" />
           </div>
 
           {/* Quick Human Help Button */}
           <button
             onClick={onOpenEscalationModal}
-            className="flex items-center space-x-1 bg-red-500/10 text-red-500 hover:bg-red-500/15 border border-red-500/25 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0"
+            className="flex items-center space-x-1 bg-red-500/10 text-red-500 hover:bg-red-500/15 border border-red-500/25 px-2 sm:px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shrink-0 min-h-[36px]"
             title="Request human officer assistance"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block"></span>
@@ -392,7 +421,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="relative" ref={toolsDropdownRef}>
             <button
               onClick={() => setIsToolsDropdownOpen(!isToolsDropdownOpen)}
-              className={`p-2 rounded-xl border transition-colors duration-150 cursor-pointer flex items-center justify-center ${
+              className={`p-2 rounded-xl border transition-colors duration-150 cursor-pointer flex items-center justify-center min-w-[36px] min-h-[36px] ${
                 isToolsDropdownOpen
                   ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
                   : isDark
