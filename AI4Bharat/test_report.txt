@@ -1,0 +1,55 @@
+=== ASR Results ===
+
+[hi]
+  Clean WER:     5.69%
+  Degraded WER:  16.26%
+  Avg latency:   2.04s
+
+[ta]
+  Clean WER:     51.61%
+  Degraded WER:  48.39%
+  Avg latency:   1.85s
+
+[te]
+  Clean WER:     8.70%
+  Degraded WER:  10.14%
+  Avg latency:   1.15s
+
+[kn]
+  Clean WER:     8.20%
+  Degraded WER:  14.75%
+  Avg latency:   1.70s
+
+[bn]
+  Clean WER:     11.70%
+  Degraded WER:  19.15%
+  Avg latency:   5.02s
+
+[mr]
+  Clean WER:     17.50%
+  Degraded WER:  27.50%
+  Avg latency:   2.31s
+
+=== TTS Results ===
+
+[bn] OK
+[hi] OK
+[kn] OK
+[mr] OK
+[ta] OK
+[te] OK
+
+=== Edge Case Results ===
+
+[bn_silence] OK (returned: 'হ')
+[bn_very_short] OK (returned: '')
+[hi_silence] OK (returned: 'ह')
+[hi_very_short] OK (returned: '')
+[kn_silence] OK (returned: 'ಹ')
+[kn_very_short] OK (returned: 'ಕೆ')
+[mr_silence] OK (returned: 'ह')
+[mr_very_short] OK (returned: '')
+[ta_silence] OK (returned: '')
+[ta_very_short] OK (returned: '')
+[te_silence] OK (returned: 'అ')
+[te_very_short] OK (returned: '')
