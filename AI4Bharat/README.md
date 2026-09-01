@@ -1,52 +1,96 @@
-# /model — Bhashini-based ASR/TTS
+# PM-AJAY Bhashini Indic Speech Microservice
 
-Thin wrapper around Bhashini's API for speech-to-text and text-to-speech.
-No heavy models loaded here — this calls Bhashini's servers, so it's
-lightweight enough to deploy on a free-tier host.
+A production-ready **FastAPI Python microservice** wrapping Bhashini's Cloud API (MeitY / Govt. of India / AI4Bharat) for Speech-to-Text (ASR) and Text-to-Speech (TTS) across 12 Indic languages.
 
-## 1. Get Bhashini credentials
+---
 
-1. Register at the ULCA integrator portal: bhashini.gov.in/ulca/user/register
-2. Get your `userID` and `ulcaApiKey`.
-3. Copy `.env.example` to `.env` and fill both in.
+## 🚀 Quick Deploy to Render
 
-If `DEFAULT_PIPELINE_ID` in `bhashini_client.py` doesn't work for your
-account, use Bhashini's Pipeline Search API to find a valid pipeline ID
-that supports `asr` and `tts` for your language, then swap it in.
+### Option A: Automatic Blueprint (Recommended)
+1. In Render Dashboard, click **New +** -> **Blueprint**.
+2. Connect your GitHub repository (`PM-AJAY-Voice-Dossier`) and select the `model` branch.
+3. Render will auto-detect `render.yaml`.
+4. Enter your environment variables when prompted:
+   - `BHASHINI_USER_ID`: Your Bhashini ULCA User ID
+   - `BHASHINI_API_KEY`: Your Bhashini ULCA API Key
+5. Click **Apply**. Render will build and deploy the service.
 
-## 2. Install dependencies
+### Option B: Manual Web Service Setup
+1. In Render Dashboard, click **New +** -> **Web Service**.
+2. Connect repository and select the `model` branch.
+3. Configure the settings:
+   - **Name**: `pmajay-bhashini-model-service`
+   - **Root Directory**: `AI4Bharat`
+   - **Runtime**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+   - **Instance Type**: `Free`
+4. Under **Environment Variables**, add:
+   - `BHASHINI_USER_ID`: `<your_user_id>`
+   - `BHASHINI_API_KEY`: `<your_api_key>`
+5. Click **Create Web Service**.
 
+---
+
+## 🔑 Getting Bhashini Credentials
+
+1. Register at the ULCA Integrator Portal: [bhashini.gov.in/ulca/user/register](https://bhashini.gov.in/ulca/user/register)
+2. Obtain your `userID` and `ulcaApiKey`.
+3. Set `BHASHINI_USER_ID` and `BHASHINI_API_KEY` in Render environment variables.
+
+---
+
+## 📡 API Endpoints
+
+### 1. Health Check
+`GET /` or `GET /health`
+```json
+{
+  "status": "ok",
+  "service": "PM-AJAY Bhashini Indic Speech Microservice",
+  "credentials_configured": true,
+  "bhashini_pipeline_ready": true
+}
 ```
-pip install -r requirements.txt --break-system-packages
+
+### 2. Speech-to-Text (ASR)
+`POST /transcribe` (multipart/form-data)
+- `audio`: WAV file upload
+- `language`: `hi`, `bn`, `ta`, `te`, `mr`, `gu`, `kn`, `ml`, `pa`, `or`, `as`, etc.
+
+`POST /transcribe-json` (JSON)
+```json
+{
+  "audio_base64": "<base64_wav_data>",
+  "language": "hi"
+}
 ```
 
-## 3. Test locally
+### 3. Text-to-Speech (TTS)
+`POST /synthesize` (Form)
+- `text`: Text string to synthesize
+- `language`: Target language code (e.g. `hi`, `bn`, `ta`)
+- `gender`: `female` or `male`
 
+`POST /synthesize-json` (JSON)
+```json
+{
+  "text": "नमस्ते, आपका स्वागत है।",
+  "language": "hi",
+  "gender": "female"
+}
 ```
-uvicorn app:app --reload
+Returns Base64 encoded WAV audio in response.
+
+---
+
+## 🧪 Local Testing
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run server locally
+uvicorn app:app --reload --port 8000
 ```
-
-Health check: `curl http://127.0.0.1:8000/` should return `{"status":"ok"}`.
-
-Or run the standalone script (needs a `sample_input.wav` in this folder):
-```
-python demo.py
-```
-
-## 4. Deploy
-
-Push this folder to your repo, connect it on Render:
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
-- Environment variables: `BHASHINI_USER_ID`, `BHASHINI_API_KEY`
-- Free tier is fine here — no heavy model is loaded locally.
-
-## Files
-
-- `bhashini_client.py` — wraps Bhashini's pipeline search/config/compute
-  calls for ASR and TTS
-- `app.py` — FastAPI server: `POST /transcribe` (audio in, text out),
-  `POST /synthesize` (text in, audio out)
-- `demo.py` — minimal standalone ASR → TTS script
-- `.env.example` — credential template
-- `Procfile` — Render start command
+Visit `http://localhost:8000/docs` for interactive Swagger UI documentation.
