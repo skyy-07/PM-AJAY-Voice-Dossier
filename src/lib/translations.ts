@@ -106,6 +106,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'interview.typing_placeholder': 'Or type answer in regional script...',
     'interview.send_text': 'Send Answer',
     'interview.understood_slots': 'Skills Understood So Far',
+    'interview.transcript_title': 'Spoken Conversation Transcript',
     'interview.complete_btn': 'Profile Complete • View Recommendations',
 
     // Profile Confirm Screen
@@ -387,6 +388,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'interview.typing_placeholder': 'অথবা বাংলায় টাইপ করুন...',
     'interview.send_text': 'উত্তর পাঠান',
     'interview.understood_slots': 'চিহ্নিত দক্ষতা সমূহ',
+    'interview.transcript_title': 'সাক্ষাৎকার সংলাপ বিবরণ',
     'interview.complete_btn': 'সাক্ষাৎকার সমাপ্ত • সুপারিশ দেখুন',
 
     // Profile Confirm Screen

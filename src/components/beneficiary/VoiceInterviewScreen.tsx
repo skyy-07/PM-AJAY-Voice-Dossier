@@ -83,13 +83,13 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
   const speakAssistantMessage = async (text: string) => {
     try {
       setConversationState('SPEAKING');
-      setStatusNotice(t('interview.listening_state', selectedLanguage));
+      setStatusNotice(t('interview.status_speaking', selectedLanguage));
       await audioController.speakText(text, selectedLanguage || session.language);
     } catch (e) {
       console.warn('Speech playback failed or completed with fallback:', e);
     } finally {
       setConversationState('LISTENING');
-      setStatusNotice(t('interview.tap_to_speak', selectedLanguage));
+      setStatusNotice(t('interview.mic_tap_speak', selectedLanguage));
     }
   };
 
@@ -122,7 +122,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
 
     setIsRecording(true);
     setConversationState('LISTENING');
-    setStatusNotice('🔴 ' + t('interview.listening_state', selectedLanguage));
+    setStatusNotice('🔴 ' + t('interview.status_listening', selectedLanguage));
 
     // Simulated waveform animation
     if (waveIntervalRef.current) clearInterval(waveIntervalRef.current);
@@ -179,7 +179,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     const isDone = response.isComplete || response.dialogueResult?.isProfileComplete || (response.session && response.session.state === 'CONFIRMING');
     if (isDone) {
       setConversationState('COMPLETED');
-      setStatusNotice(t('interview.completed', selectedLanguage));
+      setStatusNotice(t('interview.complete_btn', selectedLanguage));
     }
   };
 
@@ -194,7 +194,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
 
     setConversationState('PROCESSING');
     setIsAiProcessing(true);
-    setStatusNotice(t('interview.processing', selectedLanguage));
+    setStatusNotice(t('interview.status_processing', selectedLanguage));
 
     // Safety timeout to guarantee the UI never gets stuck in processing
     if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
@@ -202,7 +202,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
       setIsAiProcessing((processing) => {
         if (processing) {
           console.warn('Recovering from long processing delay');
-          setStatusNotice(t('interview.listening_state', selectedLanguage));
+          setStatusNotice(t('interview.status_listening', selectedLanguage));
           setConversationState('LISTENING');
           return false;
         }
@@ -242,13 +242,13 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     setLiveTranscript('');
     setIsAiProcessing(true);
     setConversationState('PROCESSING');
-    setStatusNotice(t('interview.processing', selectedLanguage));
+    setStatusNotice(t('interview.status_processing', selectedLanguage));
 
     // Safety timeout to prevent stuck state
     if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
     processingTimeoutRef.current = setTimeout(() => {
       setIsAiProcessing(false);
-      setStatusNotice(t('interview.listening_state', selectedLanguage));
+      setStatusNotice(t('interview.status_listening', selectedLanguage));
       setConversationState('LISTENING');
     }, 9000);
 
@@ -302,29 +302,98 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
     }
   };
 
-  // Common quick spoken samples for rural trade beneficiaries
-  const quickVoicePrompts = [
-    { 
-      label: 'वेल्डिंग व ग्रिल (5 वर्ष)', 
-      text: 'मैं पिछले 5 साल से वेल्डिंग, ग्रिल और लोहे का गेट बनाने का काम कर रहा हूँ।',
-      trade: 'Welder'
-    },
-    { 
-      label: 'सिलाई व टेलरिंग (4 वर्ष)', 
-      text: 'मैं पिछले 4 साल से ब्लाउज, सूट और सिलाई मशीन से कपड़े सिलने का काम करती हूँ।',
-      trade: 'Tailor'
-    },
-    { 
-      label: 'ट्रैक्टर व मोटर रिपेयर (6 वर्ष)', 
-      text: 'मैं पिछले 6 साल से ट्रैक्टर, डीजल पंप और मोटर ठीक करने का काम करता हूँ।',
-      trade: 'Mechanic'
-    },
-    { 
-      label: 'हथकरघा बुनाई (7 वर्ष)', 
-      text: 'हमारा पारिवारिक काम बनारसी साड़ी और कपड़े की हथकरघा बुनाई का है, 7 साल का अनुभव है।',
-      trade: 'Weaver'
+  // Multilingual quick spoken samples for rural trade beneficiaries
+  const getQuickVoicePrompts = (lang: SupportedLanguage) => {
+    const code = lang === 'auto' ? 'hi' : lang;
+    switch (code) {
+      case 'bn':
+        return [
+          { label: 'ওয়েল্ডিং ও গ্রিল (৫ বছর)', text: 'আমি গত ৫ বছর ধরে ওয়েল্ডিং, গ্রিল এবং লোহার গেট তৈরির কাজ করছি।', trade: 'Welder' },
+          { label: 'সেলাই ও দর্জি কাজ (৪ বছর)', text: 'আমি গত ৪ বছর ধরে ব্লাউজ, স্যুট এবং সেলাই মেশিনে জামাকাপড় সেলাই করার কাজ করছি।', trade: 'Tailor' },
+          { label: 'ট্রাক্টর ও মোটর মেরামত (৬ বছর)', text: 'আমি গত ৬ বছর ধরে ট্রাক্টর, ডিজেল পাম্প এবং মোটর মেরামতের কাজ করছি।', trade: 'Mechanic' },
+          { label: 'তাঁত বুনন (৭ বছর)', text: 'আমাদের পারিবারিক কাজ বেনারসি শাড়ি ও কাপড়ের তাঁত বুনন, ৭ বছরের অভিজ্ঞতা রয়েছে।', trade: 'Weaver' }
+        ];
+      case 'en':
+        return [
+          { label: 'Welding & Fabrication (5 yrs)', text: 'I have been working in welding, grill fabrication, and iron gate making for 5 years.', trade: 'Welder' },
+          { label: 'Stitching & Tailoring (4 yrs)', text: 'I have 4 years of hands-on experience in stitching blouses, suits, and garments using sewing machines.', trade: 'Tailor' },
+          { label: 'Tractor & Motor Repair (6 yrs)', text: 'I have been repairing tractors, diesel pumps, and motors for the past 6 years.', trade: 'Mechanic' },
+          { label: 'Handloom Weaving (7 yrs)', text: 'Our family trade is handloom weaving of Banarasi sarees and fabrics, I have 7 years experience.', trade: 'Weaver' }
+        ];
+      case 'ta':
+        return [
+          { label: 'வெல்டிங் மற்றும் கிரில் (5 ஆண்டுகள்)', text: 'நான் கடந்த 5 ஆண்டுகளாக வெல்டிங் மற்றும் கிரில் தயாரிப்பு வேலை செய்து வருகிறேன்.', trade: 'Welder' },
+          { label: 'தையல் வேலை (4 ஆண்டுகள்)', text: 'நான் கடந்த 4 ஆண்டுகளாக தையல் இயந்திரம் மூலம் சட்டைகள் மற்றும் ஆடைகள் தைத்து வருகிறேன்.', trade: 'Tailor' },
+          { label: 'டிராக்டர் மோட்டார் பழுது (6 ஆண்டுகள்)', text: 'நான் கடந்த 6 ஆண்டுகளாக டிராக்டர் மற்றும் மோட்டார் பழுதுபார்க்கும் வேலை செய்கிறேன்.', trade: 'Mechanic' },
+          { label: 'கைத்தறி நெசவு (7 ஆண்டுகள்)', text: 'எங்கள் குடும்ப தொழில் கைத்தறி நெசவு, எனக்கு 7 ஆண்டுகள் அனுபவம் உள்ளது.', trade: 'Weaver' }
+        ];
+      case 'te':
+        return [
+          { label: 'వెల్డింగ్ & గ్రిల్ పనులు (5 సంవత్సరాలు)', text: 'నేను గత 5 సంవత్సరాలుగా వెల్డింగ్ మరియు ఇనుప గేట్లు చేసే పని చేస్తున్నాను.', trade: 'Welder' },
+          { label: 'కుట్టు పని & టైలరింగ్ (4 సంవత్సరాలు)', text: 'నేను గత 4 సంవత్సరాలుగా జాకెట్లు, బట్టలు కుట్టే టైలరింగ్ పని చేస్తున్నాను.', trade: 'Tailor' },
+          { label: 'ట్రాక్టర్ & మోటార్ రిపేర్ (6 సంవత్సరాలు)', text: 'నేను గత 6 సంవత్సరాలుగా ట్రాక్టర్లు మరియు పంపులు రిపేర్ చేస్తున్నాను.', trade: 'Mechanic' },
+          { label: 'చేనేత నేత పని (7 సంవత్సరాలు)', text: 'మాది చేనేత నేత వృత్తి, నాకు 7 సంవత్సరాల అనుభవం ఉంది.', trade: 'Weaver' }
+        ];
+      case 'mr':
+        return [
+          { label: 'वेल्डिंग आणि ग्रिल (५ वर्षे)', text: 'मी गेल्या ५ वर्षांपासून वेल्डिंग आणि लोखंडी गेट बनवण्याचे काम करत आहे.', trade: 'Welder' },
+          { label: 'शिवणकाम व टेलरिंग (४ वर्षे)', text: 'मी गेल्या ४ वर्षांपासून कपडे आणि ब्लाउज शिवण्याचे काम करत आहे.', trade: 'Tailor' },
+          { label: 'ट्रॅक्टर व मोटर दुरुस्ती (६ वर्षे)', text: 'मी गेल्या ६ वर्षांपासून ट्रॅक्टर आणि मोटर दुरुस्तीचे काम करत आहे.', trade: 'Mechanic' },
+          { label: 'हातमाग विणकाम (७ वर्षे)', text: 'आमचा कौटुंबिक व्यवसाय हातमाग विणकामाचा असून मला ७ वर्षांचा अनुभव आहे.', trade: 'Weaver' }
+        ];
+      case 'gu':
+        return [
+          { label: 'વેલ્ડિંગ અને ગ્રીલ (5 વર્ષ)', text: 'હું છેલ્લા 5 વર્ષથી વેલ્ડિંગ અને ગ્રીલ બનાવવાનું કામ કરી રહ્યો છું.', trade: 'Welder' },
+          { label: 'સિવણ કામ અને ટેલરિંગ (4 વર્ષ)', text: 'હું છેલ્લા 4 વર્ષથી કપડાં સીવવાનું કામ કરું છું.', trade: 'Tailor' },
+          { label: 'ટ્રેક્ટર અને મોટર રિપેર (6 વર્ષ)', text: 'હું છેલ્લા 6 વર્ષથી ટ્રેક્ટર અને મોટર રિપેરિંગ કરું છું.', trade: 'Mechanic' },
+          { label: 'હાથવણાટ વણાટકામ (7 વર્ષ)', text: 'અમારો કૌટુંબિક વ્યવસાય હાથવણાટનો છે, મને 7 વર્ષનો અનુભવ છે.', trade: 'Weaver' }
+        ];
+      case 'kn':
+        return [
+          { label: 'ವೆಲ್ಡಿಂಗ್ ಮತ್ತು ಗೇಟ್ ಕೆಲಸ (5 ವರ್ಷ)', text: 'ನಾನು ಕಳೆದ 5 ವರ್ಷಗಳಿಂದ ವೆಲ್ಡಿಂಗ್ ಮತ್ತು ಗ್ರಿಲ್ ಕೆಲಸ ಮಾಡುತ್ತಿದ್ದೇನೆ.', trade: 'Welder' },
+          { label: 'ಹೊಲಿಗೆ ಮತ್ತು ಟೈಲರಿಂಗ್ (4 ವರ್ಷ)', text: 'ನಾನು ಕಳೆದ 4 ವರ್ಷಗಳಿಂದ ಹೊಲಿಗೆ ಯಂತ್ರದಲ್ಲಿ ಬಟ್ಟೆ ಹೊಲಿಯುತ್ತಿದ್ದೇನೆ.', trade: 'Tailor' },
+          { label: 'ಟ್ರ್ಯಾಕ್ಟರ್ ಮತ್ತು ಮೋಟಾರ್ ರಿಪೇರಿ (6 ವರ್ಷ)', text: 'ನಾನು ಕಳೆದ 6 ವರ್ಷಗಳಿಂದ ಟ್ರ್ಯಾಕ್ಟರ್ ರಿಪೇರಿ ಮಾಡುತ್ತಿದ್ದೇನೆ.', trade: 'Mechanic' },
+          { label: 'ಮಗ್ಗ ನೇಯ್ಗೆ (7 ವರ್ಷ)', text: 'ನಮ್ಮ ಮನೆತನದ ಕಸುಬು ಕೈಮಗ್ಗ ನೇಯ್ಗೆ, ನನಗೆ 7 ವರ್ಷದ ಅನುಭವವಿದೆ.', trade: 'Weaver' }
+        ];
+      case 'ml':
+        return [
+          { label: 'വെൽഡിംഗ് പണി (5 വർഷം)', text: 'ഞാൻ കഴിഞ്ഞ 5 വർഷമായി വെൽഡിംഗ് പണി ചെയ്യുന്നു.', trade: 'Welder' },
+          { label: 'തയ്യൽ പണി (4 വർഷം)', text: 'ഞാൻ കഴിഞ്ഞ 4 വർഷമായി തയ്യൽ പണി ചെയ്യുന്നു.', trade: 'Tailor' },
+          { label: 'ട്രാക്ടർ & മോട്ടോർ റിപ്പയർ (6 വർഷം)', text: 'ഞാൻ കഴിഞ്ഞ 6 വർഷമായി മോട്ടോർ റിപ്പയർ ചെയ്യുന്നു.', trade: 'Mechanic' },
+          { label: 'കൈത്തറി നെയ്ത്ത് (7 വർഷം)', text: 'ഞങ്ങളുടെ കുടുംബ തൊഴിൽ കൈത്തറി നെയ്ത്താണ്, 7 വർഷത്തെ പരിചയമുണ്ട്.', trade: 'Weaver' }
+        ];
+      case 'pa':
+        return [
+          { label: 'ਵੈਲਡਿੰਗ ਅਤੇ ਗ੍ਰਿਲ (5 ਸਾਲ)', text: 'ਮੈਂ ਪਿਛਲੇ 5 ਸਾਲਾਂ ਤੋਂ ਵੈਲਡਿੰਗ ਅਤੇ ਲੋਹੇ ਦਾ ਕੰਮ ਕਰ ਰਿਹਾ ਹਾਂ।', trade: 'Welder' },
+          { label: 'ਸਿਲਾਈ ਅਤੇ ਟੇਲਰਿੰਗ (4 ਸਾਲ)', text: 'ਮੈਂ ਪਿਛਲੇ 4 ਸਾਲਾਂ ਤੋਂ ਕੱਪੜੇ ਸਿਲਾਈ ਦਾ ਕੰਮ ਕਰ ਰਹੀ ਹਾਂ।', trade: 'Tailor' },
+          { label: 'ਟਰੈਕਟਰ ਅਤੇ ਮੋਟਰ ਰਿਪੇਅਰ (6 ਸਾਲ)', text: 'ਮੈਂ ਪਿਛਲੇ 6 ਸਾਲਾਂ ਤੋਂ ਟਰੈਕਟਰ ਅਤੇ ਮੋਟਰ ਠੀਕ ਕਰਨ ਦਾ ਕੰਮ ਕਰਦਾ ਹਾਂ।', trade: 'Mechanic' },
+          { label: 'ਹੱਥਖੱਡੀ ਬੁਣਾਈ (7 ਸਾਲ)', text: 'ਸਾਡਾ ਪਰਿਵਾਰਕ ਕੰਮ ਹੱਥਖੱਡੀ ਬੁਣਾਈ ਦਾ ਹੈ, 7 ਸਾਲ ਦਾ ਤਜਰਬਾ ਹੈ।', trade: 'Weaver' }
+        ];
+      case 'or':
+        return [
+          { label: 'ୱେଲ୍ଡିଂ ଓ ଗ୍ରୀଲ୍ (୫ ବର୍ଷ)', text: 'ମୁଁ ଗତ ୫ ବର୍ଷ ଧରି ୱେଲ୍ଡିଂ ଏବଂ ଲୁହା କାମ କରୁଛି।', trade: 'Welder' },
+          { label: 'ସିଲାଇ ଓ ଟେଲରିଂ (୪ ବର୍ଷ)', text: 'ମୁଁ ଗତ ୪ ବର୍ଷ ଧରି ଲୁଗା ସିଲାଇ କାମ କରୁଛି।', trade: 'Tailor' },
+          { label: 'ଟ୍ରାକ୍ଟର ଓ ମୋଟର ମରାମତି (୬ ବର୍ଷ)', text: 'ମୁଁ ଗତ ୬ ବର୍ଷ ଧରି ଟ୍ରାକ୍ଟର ମରାମତି କରୁଛି।', trade: 'Mechanic' },
+          { label: 'ଲୁଗା ବୁଣା ହସ୍ତତନ୍ତ (୭ ବର୍ଷ)', text: 'ଆମର ପାରିବାରିକ କାମ ହସ୍ତତନ୍ତ ବୁଣା, ମୋର ୭ ବର୍ଷର ଅଭିଜ୍ଞତା ଅଛି।', trade: 'Weaver' }
+        ];
+      case 'as':
+        return [
+          { label: 'ৱেল্ডিং আৰু গ্ৰিল (৫ বছৰ)', text: 'মই যোৱা ৫ বছৰ ধৰি ৱেল্ডিং আৰু লোহাৰ কাম কৰি আছো।', trade: 'Welder' },
+          { label: 'চিলাই আৰু টেইলৰিং (৪ বছৰ)', text: 'মই যোৱা ৪ বছৰ ধৰি কাপোৰ চিলাইৰ কাম কৰি আছো।', trade: 'Tailor' },
+          { label: 'ট্ৰেক্টৰ আৰু মটৰ মেৰামতি (৬ বছৰ)', text: 'মই যোৱা ৬ বছৰ ধৰি ট্ৰেক্টৰ মেৰামতি কৰি আছো।', trade: 'Mechanic' },
+          { label: 'তাঁতশাল বোৱা (৭ বছৰ)', text: 'আমাৰ পৰিয়ালৰ কাম তাঁতশাল বোৱা, মোৰ ৭ বছৰৰ অভিজ্ঞতা আছে।', trade: 'Weaver' }
+        ];
+      default: // hi
+        return [
+          { label: 'वेल्डिंग व ग्रिल (5 वर्ष)', text: 'मैं पिछले 5 साल से वेल्डिंग, ग्रिल और लोहे का गेट बनाने का काम कर रहा हूँ।', trade: 'Welder' },
+          { label: 'सिलाई व टेलरिंग (4 वर्ष)', text: 'मैं पिछले 4 साल से ब्लाउज, सूट और सिलाई मशीन से कपड़े सिलने का काम करती हूँ।', trade: 'Tailor' },
+          { label: 'ट्रैक्टर व मोटर रिपेयर (6 वर्ष)', text: 'मैं पिछले 6 साल से ट्रैक्टर, डीजल पंप और मोटर ठीक करने का काम करता हूँ।', trade: 'Mechanic' },
+          { label: 'हथकरघा बुनाई (7 वर्ष)', text: 'हमारा पारिवारिक काम बनारसी साड़ी और कपड़े की हथकरघा बुनाई का है, 7 साल का अनुभव है।', trade: 'Weaver' }
+        ];
     }
-  ];
+  };
+
+  const quickVoicePrompts = getQuickVoicePrompts(selectedLanguage || session.language || 'hi');
 
   return (
     <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6 text-[#E5E5E5] pb-24 md:pb-8">
@@ -463,7 +532,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               <div className="flex items-center space-x-2">
                 <UserCheck className="w-4 h-4 text-amber-400" />
                 <h3 className="font-editorial-serif text-sm font-bold text-white">
-                  {t('interview.dossier_slots', selectedLanguage)}
+                  {t('interview.understood_slots', selectedLanguage)}
                 </h3>
               </div>
               <span className="text-[10px] font-mono font-medium text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded">
@@ -515,7 +584,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               onClick={() => onCompleteInterview(candidate)}
               className="mt-4 w-full py-3.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-xs tracking-wider uppercase rounded-xl shadow-lg shadow-amber-500/15 flex items-center justify-center space-x-2 transition cursor-pointer min-h-[48px]"
             >
-              <span>{t('interview.review_btn', selectedLanguage)}</span>
+              <span>{t('interview.complete_btn', selectedLanguage)}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -587,7 +656,7 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               <div className="flex justify-start">
                 <div className="bg-[#222222] border border-white/10 rounded-2xl rounded-tl-none p-4 flex items-center space-x-2 text-xs text-white/60">
                   <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
-                  <span>{t('interview.processing', selectedLanguage)}</span>
+                  <span>{t('interview.status_processing', selectedLanguage)}</span>
                 </div>
               </div>
             )}
