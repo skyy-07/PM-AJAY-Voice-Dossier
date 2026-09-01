@@ -14,7 +14,9 @@ import {
   Pause,
   Play,
   Languages,
-  UserCheck
+  UserCheck,
+  Upload,
+  FileAudio
 } from 'lucide-react';
 import { 
   ActiveInterviewSession, 
@@ -60,6 +62,41 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
   const waveIntervalRef = useRef<any>(null);
   const recordedTextRef = useRef<string>('');
   const processingTimeoutRef = useRef<any>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAudioFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    audioController.stopSpeaking();
+    setConversationState('PROCESSING');
+    setIsAiProcessing(true);
+    setStatusNotice(`📁 Processing "${file.name}" (${(file.size / 1024).toFixed(1)} KB)...`);
+
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          const base64Data = result.split(',')[1] || result;
+          resolve(base64Data);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const response = await api.sendAudio(session.sessionId, base64);
+      audioController.playChime('success');
+      handleAssistantResponse(response);
+    } catch (err: any) {
+      console.error('Audio file upload error:', err);
+      setStatusNotice('⚠️ ' + (selectedLanguage === 'hi' ? 'ऑडियो फ़ाइल पढ़ने में असमर्थ। कृपया दूसरी फ़ाइल चुनें या बोलें।' : 'Could not process audio file. Please try another file or speak.'));
+      setConversationState('LISTENING');
+    } finally {
+      setIsAiProcessing(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   // Auto-scroll messages
   useEffect(() => {
@@ -490,6 +527,19 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               </button>
             </div>
 
+            {/* Secondary Audio File Upload Action */}
+            <div className="mt-1 text-center">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAiProcessing || isRecording}
+                className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-[11px] text-white/70 hover:text-amber-300 transition cursor-pointer disabled:opacity-30"
+              >
+                <FileAudio className="w-3.5 h-3.5 text-amber-400" />
+                <span>Upload Audio File from Mobile/Desktop</span>
+              </button>
+            </div>
+
             {/* Real-time Audio Frequency Spectrum Visualizer */}
             <div className="my-2 sm:my-3 text-left">
               <AudioFrequencyVisualizer
@@ -504,8 +554,25 @@ export const VoiceInterviewScreen: React.FC<VoiceInterviewScreenProps> = ({
               />
             </div>
 
-            {/* Spoken Text Input (Optional typing fallback) */}
+            {/* Spoken Text Input (Optional typing fallback) & File Upload */}
             <div className="mt-3 sm:mt-4 flex items-center space-x-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="audio/*,video/webm,audio/wav,audio/mp3,audio/m4a,audio/ogg,audio/aac,audio/flac"
+                className="hidden"
+                onChange={handleAudioFileUpload}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isAiProcessing || isRecording}
+                className="bg-[#242424] hover:bg-[#2e2e2e] border border-white/10 text-white/80 hover:text-amber-300 px-3 py-2.5 rounded-xl text-xs font-medium transition cursor-pointer disabled:opacity-30 flex items-center space-x-1.5 min-h-[42px] shrink-0"
+                title="Upload audio file from mobile or desktop"
+              >
+                <Upload className="w-4 h-4 text-amber-400" />
+                <span className="hidden sm:inline">Upload Audio</span>
+              </button>
               <input
                 type="text"
                 value={transcriptInput}

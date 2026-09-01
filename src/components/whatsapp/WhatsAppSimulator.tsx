@@ -61,6 +61,19 @@ export const WhatsAppSimulator: React.FC = () => {
     null,
   );
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const waFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleWaFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const duration = `0:${Math.floor(Math.random() * 15) + 10}`;
+    const cleanName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+    
+    // Process uploaded voice note
+    handleSendVoiceNote(cleanName || 'Uploaded audio note', duration);
+    if (waFileInputRef.current) waFileInputRef.current.value = '';
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -453,7 +466,21 @@ export const WhatsAppSimulator: React.FC = () => {
 
         {/* Bottom Input Controls */}
         <div className="bg-[#18222d] px-4 py-3 flex items-center space-x-3 border-t border-white/10">
-          <Paperclip className="w-4 h-4 text-white/40 cursor-pointer hover:text-yellow-400" />
+          <input
+            type="file"
+            ref={waFileInputRef}
+            accept="audio/*,video/webm,audio/wav,audio/mp3,audio/m4a,audio/ogg"
+            className="hidden"
+            onChange={handleWaFileUpload}
+          />
+          <button
+            type="button"
+            onClick={() => waFileInputRef.current?.click()}
+            className="text-white/40 hover:text-amber-400 p-1 cursor-pointer transition"
+            title="Upload Audio File from device"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
           <input
             type="text"
             value={inputVal}
