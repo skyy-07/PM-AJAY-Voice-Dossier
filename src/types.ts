@@ -211,6 +211,9 @@ export interface Recommendation {
   skillsToDevelop: string[];
   matchedSkills?: string[];
   skillGaps?: string[];
+  matchRationale?: string;
+  sectorSkillCouncil?: string;
+  recognizedPriorSkills?: string[];
   trainingProvider: TrainingProvider;
   nearestCenterDistanceKm: number;
   nearestTrainingProvider?: {

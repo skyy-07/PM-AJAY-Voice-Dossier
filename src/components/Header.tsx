@@ -15,12 +15,14 @@ import {
   Layers,
   StopCircle,
   Smartphone,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { SupportedLanguage, UserRole } from "../types.js";
 import { t, getScreenNarration } from "../lib/translations.js";
 import { useTheme } from "../context/ThemeContext.js";
 import { audioController } from "../lib/audio.js";
+import { userPreferences } from "../lib/userPreferences.js";
 
 interface HeaderProps {
   currentView: string;
@@ -62,16 +64,31 @@ export const Header: React.FC<HeaderProps> = ({
   const [isChannelDropdownOpen, setIsChannelDropdownOpen] = useState(false);
   const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return !!userPreferences.getAdminSession().user;
+  });
 
   const channelDropdownRef = useRef<HTMLDivElement>(null);
   const toolsDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Subscribe to audio controller for TalkBack status
+  // Subscribe to audio controller for TalkBack status and Admin Auth status
   useEffect(() => {
     const unsubscribe = audioController.subscribeTalkBack((status) => {
       setIsSpeaking(status.isSpeaking);
     });
-    return () => unsubscribe();
+
+    const handleAdminAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setIsAdminAuthenticated(!!customEvent.detail.authenticated);
+      }
+    };
+
+    window.addEventListener('pmajay_admin_auth_change', handleAdminAuthChange);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pmajay_admin_auth_change', handleAdminAuthChange);
+    };
   }, []);
 
   // Close dropdowns on outside click
@@ -158,7 +175,7 @@ export const Header: React.FC<HeaderProps> = ({
       description:
         "District monitoring, PM-AJAY allocation & escalation console",
       icon: ShieldCheck,
-      badge: "Admin & Audit",
+      badge: isAdminAuthenticated ? "✓ Admin Active" : "🔒 Auth Req",
       accentBg: "bg-amber-500/10",
       accentText: "text-amber-500",
       accentBorder: "border-amber-500/30",

@@ -17,30 +17,78 @@ export const apiRouter = Router();
 
 // 1. Authentication & Role Switcher
 apiRouter.post('/auth/login', (req: Request, res: Response) => {
-  const { role, userId } = req.body;
+  const { role, userId, username, email, password } = req.body;
   const users = db.getUsers();
   let user: User | undefined;
 
+  const inputIdOrEmail = (username || email || '').toLowerCase().trim();
+
   if (userId) {
     user = db.getUserById(userId);
+  } else if (inputIdOrEmail) {
+    user = users.find(u => 
+      u.email.toLowerCase() === inputIdOrEmail || 
+      u.id.toLowerCase() === inputIdOrEmail ||
+      u.name.toLowerCase().includes(inputIdOrEmail)
+    );
   } else if (role) {
     user = users.find(u => u.role === role);
   }
 
-  if (!user) {
-    user = users[0]; // fallback
+  if (!user && (role || inputIdOrEmail)) {
+    // If specific non-matching role or username was provided
+    if (role === 'district_admin' || role === 'state_admin' || role === 'super_admin' || inputIdOrEmail === 'admin') {
+      user = users.find(u => u.role === (role || 'district_admin'));
+    }
   }
+
+  if (!user) {
+    user = users[0]; // fallback default admin
+  }
+
+  // Password validation check if password was explicitly provided and wrong
+  if (password && password !== 'pmajay2026' && password !== 'admin123' && password !== 'admin') {
+    db.addAuditLog({
+      actorId: user.id || 'UNKNOWN',
+      actorRole: user.role || 'district_admin',
+      action: 'ADMIN_LOGIN_FAILED',
+      entityType: 'system',
+      entityId: user.id || 'AUTH',
+      details: `Failed admin login attempt for user/email: ${username || email || user.email}`
+    });
+    return res.status(401).json({ success: false, message: 'Invalid credentials. Use password "pmajay2026" or Quick Login.' });
+  }
+
+  const token = `ADM-SESSION-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
   db.addAuditLog({
     actorId: user.id,
     actorRole: user.role,
-    action: 'USER_LOGIN',
+    action: 'ADMIN_LOGIN_SUCCESS',
     entityType: 'system',
     entityId: user.id,
-    details: `User ${user.name} logged in with role ${user.role}.`
+    details: `Admin User ${user.name} (${user.email}) authenticated successfully with role ${user.role}.`
   });
 
-  res.json({ success: true, user });
+  res.json({ success: true, user, token });
+});
+
+apiRouter.post('/auth/logout', (req: Request, res: Response) => {
+  const { userId } = req.body;
+  if (userId) {
+    const user = db.getUserById(userId);
+    if (user) {
+      db.addAuditLog({
+        actorId: user.id,
+        actorRole: user.role,
+        action: 'ADMIN_LOGOUT',
+        entityType: 'system',
+        entityId: user.id,
+        details: `User ${user.name} logged out.`
+      });
+    }
+  }
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 apiRouter.get('/auth/me', (req: Request, res: Response) => {

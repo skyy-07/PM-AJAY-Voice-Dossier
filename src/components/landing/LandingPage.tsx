@@ -23,8 +23,12 @@ interface LandingPageProps {
   onOpenWhatsApp: () => void;
   onOpenKiosk: () => void;
   onOpenAdmin: () => void;
+  onOpenMobile?: () => void;
   onSelectSample: (sampleType: 'welder' | 'tailor' | 'tractor' | 'weaver') => void;
   selectedLanguage: SupportedLanguage;
+  onSelectLanguage?: (lang: SupportedLanguage) => void;
+  hasGivenConsent?: boolean;
+  onToggleConsent?: (granted: boolean) => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({

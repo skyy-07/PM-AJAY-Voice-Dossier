@@ -33,6 +33,39 @@ export const api = {
     return data;
   },
 
+  async adminLogin(params: { username?: string; password?: string; role?: string; userId?: string }): Promise<{ success: boolean; user: User; token: string; message?: string }> {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || 'Authentication failed');
+    }
+    cloudService.logAuditEvent({
+      actorId: data.user?.id || 'ADM',
+      actorRole: data.user?.role || 'district_admin',
+      action: 'ADMIN_LOGIN_SUCCESS',
+      entityType: 'system',
+      entityId: data.user?.id || 'LOGIN',
+      details: `Admin ${data.user?.name} logged in with role ${data.user?.role}`
+    });
+    return data;
+  },
+
+  async adminLogout(userId?: string): Promise<void> {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+    } catch {
+      // ignore network error on logout
+    }
+  },
+
   async getMe(): Promise<{ user: User }> {
     const res = await fetch('/api/auth/me');
     return res.json();

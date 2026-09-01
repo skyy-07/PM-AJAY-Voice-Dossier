@@ -39,13 +39,57 @@ import {
   EconomicDemand, 
   HumanEscalation, 
   IntegrationServiceStatus, 
-  AuditLog 
+  AuditLog,
+  User
 } from '../../types.js';
 import { api } from '../../lib/api.js';
 import { cloudService } from '../../lib/firebase.js';
+import { userPreferences } from '../../lib/userPreferences.js';
 import { GeospatialMap } from './GeospatialMap.js';
+import { AdminLoginModal } from './AdminLoginModal.js';
 
-export const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  adminUser?: User | null;
+  onLogout?: () => void;
+  onLoginSuccess?: (user: User, token: string) => void;
+  onCancelLogin?: () => void;
+}
+
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({
+  adminUser,
+  onLogout,
+  onLoginSuccess,
+  onCancelLogin
+}) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    return adminUser || userPreferences.getAdminSession().user;
+  });
+
+  useEffect(() => {
+    const handleAuthChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setCurrentUser(customEvent.detail.user);
+      }
+    };
+    window.addEventListener('pmajay_admin_auth_change', handleAuthChange);
+    return () => window.removeEventListener('pmajay_admin_auth_change', handleAuthChange);
+  }, []);
+
+  const handleLogout = async () => {
+    if (currentUser) {
+      await api.adminLogout(currentUser.id);
+    }
+    userPreferences.clearAdminSession();
+    setCurrentUser(null);
+    if (onLogout) onLogout();
+  };
+
+  const handleLoginSuccess = (user: User, token: string) => {
+    userPreferences.setAdminSession(token, user);
+    setCurrentUser(user);
+    if (onLoginSuccess) onLoginSuccess(user, token);
+  };
   const [activeTab, setActiveTab] = useState<'overview' | 'beneficiaries' | 'providers' | 'demand' | 'map' | 'escalations' | 'integrations' | 'audits'>('overview');
   
   // Data states
@@ -337,6 +381,15 @@ export const AdminDashboard: React.FC = () => {
     return matchesSearch && matchesDistrict && matchesStatus;
   });
 
+  if (!currentUser) {
+    return (
+      <AdminLoginModal
+        onLoginSuccess={handleLoginSuccess}
+        onCancel={onCancelLogin}
+      />
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
       {/* Toast Notification */}
@@ -347,7 +400,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Top Header with Database Connectivity Status */}
+      {/* Top Header with Database Connectivity Status & Admin Auth Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b border-white/10 pb-6">
         <div>
           <div className="flex items-center flex-wrap gap-2 mb-1.5">
@@ -355,6 +408,12 @@ export const AdminDashboard: React.FC = () => {
               PM-AJAY State &bull; District Governance
             </span>
             
+            {/* Logged In Admin Badge */}
+            <div className="flex items-center space-x-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-300 text-[10px] font-mono px-2.5 py-0.5 rounded">
+              <UserCheck className="w-3 h-3 text-orange-400" />
+              <span>Officer: {currentUser.name} ({currentUser.role.replace('_', ' ').toUpperCase()})</span>
+            </div>
+
             {/* Live Database Connected Pill */}
             <div className={`flex items-center space-x-1.5 px-2.5 py-0.5 rounded text-[10px] font-mono border ${
               dbStatus.firestoreConnected 
@@ -400,7 +459,16 @@ export const AdminDashboard: React.FC = () => {
             className="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Quick Register User</span>
+            <span>Quick Register</span>
+          </button>
+
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-300 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer"
+            title="Lock session and log out of governance console"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+            <span>Log Out</span>
           </button>
 
           <button

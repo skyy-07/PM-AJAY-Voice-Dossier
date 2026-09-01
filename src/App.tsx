@@ -251,7 +251,11 @@ function MainApp() {
 
         {currentView === 'kiosk' && <OfflineKioskScreen />}
 
-        {currentView === 'admin' && <AdminDashboard />}
+        {currentView === 'admin' && (
+          <AdminDashboard
+            onCancelLogin={() => setCurrentView('landing')}
+          />
+        )}
       </main>
 
       {/* Editorial Footer */}
