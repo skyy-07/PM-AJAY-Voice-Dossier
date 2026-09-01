@@ -11,6 +11,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'header.banner': 'PM-AJAY Skilling & Livelihood Dissemination System • Vol. IV',
     'header.dossier': 'Interactive Dossier',
     'header.spoken_intake': 'Spoken Intake',
+    'header.mobile_ux': 'Mobile App Flow',
     'header.whatsapp': 'WhatsApp Notes',
     'header.kiosk': 'Offline Kiosk',
     'header.governance': 'Governance',
@@ -105,6 +106,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'interview.typing_placeholder': 'Or type answer in regional script...',
     'interview.send_text': 'Send Answer',
     'interview.understood_slots': 'Skills Understood So Far',
+    'interview.transcript_title': 'Spoken Conversation Transcript',
     'interview.complete_btn': 'Profile Complete • View Recommendations',
 
     // Profile Confirm Screen
@@ -151,6 +153,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'header.banner': 'पीएम-अजय कौशल एवं आजीविका प्रसार प्रणाली • खंड IV',
     'header.dossier': 'इंटरैक्टिव डॉसियर',
     'header.spoken_intake': 'मौखिक साक्षात्कार',
+    'header.mobile_ux': 'मोबाइल ऐप फ्लो',
     'header.whatsapp': 'व्हाट्सएप नोट्स',
     'header.kiosk': 'ऑफ़लाइन कियोस्क',
     'header.governance': 'प्रशासनिक पैनल',
@@ -385,6 +388,7 @@ export const TRANSLATIONS: Record<string, Record<string, string>> = {
     'interview.typing_placeholder': 'অথবা বাংলায় টাইপ করুন...',
     'interview.send_text': 'উত্তর পাঠান',
     'interview.understood_slots': 'চিহ্নিত দক্ষতা সমূহ',
+    'interview.transcript_title': 'সাক্ষাৎকার সংলাপ বিবরণ',
     'interview.complete_btn': 'সাক্ষাৎকার সমাপ্ত • সুপারিশ দেখুন',
 
     // Profile Confirm Screen

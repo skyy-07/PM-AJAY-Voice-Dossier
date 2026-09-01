@@ -1,9 +1,35 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Open access for PM-AJAY prototype demo and authenticated or anonymous clients
+    // PM-AJAY Beneficiary Candidates
+    match /candidates/{candidateId} {
+      allow read, write: if true;
+    }
+    
+    // Human Escalations Queue
+    match /escalations/{escalationId} {
+      allow read, write: if true;
+    }
+    
+    // Audit Logs
+    match /audit_logs/{logId} {
+      allow read, write: if true;
+    }
+    
+    // Recommendations
+    match /recommendations/{recommendationId} {
+      allow read, write: if true;
+    }
+
+    // System status & health pings
+    match /system_status/{docId} {
+      allow read, write: if true;
+    }
+
+    // Default fallback
     match /{document=**} {
       allow read, write: if true;
     }
   }
 }
+

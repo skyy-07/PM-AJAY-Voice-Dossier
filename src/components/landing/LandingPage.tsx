@@ -44,20 +44,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <div className={`min-h-[calc(100vh-80px)] transition-colors duration-200 ${
-      isDark ? 'bg-[#0a1120] text-slate-100' : 'bg-slate-50 text-slate-800'
+      isDark ? 'bg-[#101a32] text-slate-100' : 'bg-[#ebdfa1] text-[#173f46]'
     } pb-20`}>
       {/* Hero Section */}
       <section className={`relative overflow-hidden pt-12 sm:pt-16 pb-16 sm:pb-24 border-b ${
         isDark 
-          ? 'bg-gradient-to-b from-[#162a56] via-[#102044] to-[#0a1120] border-blue-900/40 text-white' 
-          : 'bg-gradient-to-b from-[#eaf2ff] via-[#f1f6ff] to-slate-50 border-blue-100 text-slate-900'
+          ? 'bg-gradient-to-br from-[#1e2c55] via-[#172646] to-[#0f1830] border-[#31446f] text-white'
+          : 'bg-gradient-to-br from-[#ebdfa1] via-[#ebdfa1] to-[#ebdea0] border-[#d9c985] text-[#173f46]'
       }`}>
         {/* Background Ambient Radial Glows */}
         <div className={`absolute top-0 right-1/4 w-96 h-96 rounded-full blur-3xl pointer-events-none ${
-          isDark ? 'bg-blue-500/10' : 'bg-blue-400/20'
+          isDark ? 'bg-[#70a69b]/10' : 'bg-[#76a994]/25'
         }`} />
         <div className={`absolute bottom-0 left-10 w-72 h-72 rounded-full blur-3xl pointer-events-none ${
-          isDark ? 'bg-amber-500/5' : 'bg-amber-400/15'
+          isDark ? 'bg-[#e6aa4b]/10' : 'bg-[#d8753b]/15'
         }`} />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -66,18 +66,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             {/* Left Content Column */}
             <div className="lg:col-span-7 space-y-6 text-left">
               {/* Top Government of India Pill Badge */}
-              <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full border text-xs font-medium tracking-wide backdrop-blur-md transition-all select-none shadow-xs ${
+              <div className={`inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full border text-xs font-medium tracking-wide backdrop-blur-md transition-all select-none shadow-xs ${
                 isDark 
                   ? 'bg-white/10 border-white/20 text-white/90 shadow-black/20' 
-                  : 'bg-blue-600/10 border-blue-600/20 text-blue-900 shadow-blue-500/10'
-              }">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                  : 'bg-[#173f46]/8 border-[#173f46]/20 text-[#173f46] shadow-[#173f46]/10'
+              }`}>
+                <span className="w-2 h-2 rounded-full bg-[#d8753b] animate-pulse"></span>
                 <span>Government of India &bull; PM-AJAY Programme</span>
               </div>
 
               {/* Huge Bold Headline matching exact screenshot */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1]">
-                <span className={isDark ? 'text-white' : 'text-slate-900'}>
+              <h1 className="font-editorial-serif text-5xl sm:text-6xl md:text-7xl font-medium tracking-[-0.04em] leading-[.98]">
+                  <span className={isDark ? 'text-[#f4f0e8]' : 'text-[#173f46]'}>
                   Your skills can
                 </span>
                 <br />
@@ -88,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
               {/* Subtitle */}
               <p className={`text-base sm:text-lg max-w-xl font-normal leading-relaxed ${
-                isDark ? 'text-slate-300' : 'text-slate-600'
+                isDark ? 'text-[#d0e0da]' : 'text-[#49676a]'
               }`}>
                 Talk to our voice assistant in your language and discover skilling and livelihood opportunities suited to your experience.
               </p>
@@ -99,7 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <button
                   id="hero-talk-btn"
                   onClick={onStartVoice}
-                  className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center space-x-2.5 text-base transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  className="bg-[#d8753b] hover:bg-[#bd5f2f] text-white font-bold px-7 py-3.5 rounded-2xl shadow-lg shadow-[#d8753b]/25 flex items-center space-x-2.5 text-base transition-all duration-200 transform hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
                 >
                   <Mic className="w-5 h-5 text-white" />
                   <span>Talk to the Assistant</span>
@@ -112,7 +112,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className={`font-semibold px-5 py-3.5 rounded-2xl border backdrop-blur-md flex items-center space-x-2 text-sm transition-all duration-200 transform hover:scale-[1.02] cursor-pointer ${
                     isDark 
                       ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white' 
-                      : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-xs'
+                      : 'bg-[#f8f5ef] hover:bg-white border-[#c9d1c8] text-[#173f46] shadow-sm'
                   }`}
                 >
                   <MessageSquare className="w-4 h-4 text-emerald-400" />
@@ -126,7 +126,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className={`font-semibold px-5 py-3.5 rounded-2xl border backdrop-blur-md flex items-center space-x-2 text-sm transition-all duration-200 transform hover:scale-[1.02] cursor-pointer ${
                     isDark 
                       ? 'bg-white/10 hover:bg-white/15 border-white/20 text-white' 
-                      : 'bg-white hover:bg-slate-50 border-slate-300 text-slate-800 shadow-xs'
+                      : 'bg-[#f8f5ef] hover:bg-white border-[#c9d1c8] text-[#173f46] shadow-sm'
                   }`}
                 >
                   <Monitor className="w-4 h-4 text-sky-400" />
@@ -159,17 +159,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 
                 {/* Outer Ring 3 */}
                 <div className={`absolute w-full h-full rounded-full border animate-radar-pulse ${
-                  isDark ? 'border-white/10 bg-blue-500/5' : 'border-blue-300/40 bg-blue-500/5'
+                    isDark ? 'border-[#9bc6ba]/20 bg-[#9bc6ba]/5' : 'border-[#4b8b87]/35 bg-[#4b8b87]/5'
                 }`} />
 
                 {/* Outer Ring 2 */}
                 <div className={`absolute w-3/4 h-3/4 rounded-full border ${
-                  isDark ? 'border-white/15' : 'border-blue-400/30'
+                    isDark ? 'border-white/15' : 'border-[#4b8b87]/30'
                 }`} />
 
                 {/* Outer Ring 1 */}
                 <div className={`absolute w-1/2 h-1/2 rounded-full border ${
-                  isDark ? 'border-white/20' : 'border-blue-500/30'
+                    isDark ? 'border-white/20' : 'border-[#4b8b87]/30'
                 }`} />
 
                 {/* Central Microphone Orb */}
@@ -178,11 +178,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center relative shadow-2xl transition-transform hover:scale-105 cursor-pointer backdrop-blur-md border-2 ${
                     isDark 
                       ? 'bg-white/10 border-white/30 text-white shadow-blue-500/20' 
-                      : 'bg-blue-600/10 border-blue-500/40 text-blue-600 shadow-blue-500/30'
+                      : 'bg-[#4b8b87]/10 border-[#4b8b87]/40 text-[#2f6d69] shadow-[#4b8b87]/30'
                   }`}
                 >
                   <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center ${
-                    isDark ? 'bg-white/15' : 'bg-blue-600'
+                    isDark ? 'bg-white/15' : 'bg-[#2f6d69]'
                   }`}>
                     <Mic className={`w-10 h-10 ${isDark ? 'text-white' : 'text-white'}`} />
                   </div>
@@ -192,14 +192,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               {/* Animated Live Audio Equalizer Waveform */}
               <div className="mt-4 flex flex-col items-center space-y-2">
                 <div className="flex items-center space-x-1.5 h-8">
-                  <span className="w-1.5 bg-blue-400/80 rounded-full animate-eq-1"></span>
-                  <span className="w-1.5 bg-blue-400/90 rounded-full animate-eq-2"></span>
-                  <span className="w-1.5 bg-white rounded-full animate-eq-3"></span>
-                  <span className="w-1.5 bg-blue-300 rounded-full animate-eq-4"></span>
-                  <span className="w-1.5 bg-orange-400 rounded-full animate-eq-5"></span>
-                  <span className="w-1.5 bg-blue-400 rounded-full animate-eq-6"></span>
-                  <span className="w-1.5 bg-blue-300/90 rounded-full animate-eq-7"></span>
-                  <span className="w-1.5 bg-blue-400/70 rounded-full animate-eq-8"></span>
+                   <span className="w-1.5 bg-[#70a69b] rounded-full animate-eq-1"></span>
+                   <span className="w-1.5 bg-[#70a69b] rounded-full animate-eq-2"></span>
+                   <span className="w-1.5 bg-[#f4f0e8] rounded-full animate-eq-3"></span>
+                   <span className="w-1.5 bg-[#9bc6ba] rounded-full animate-eq-4"></span>
+                   <span className="w-1.5 bg-[#e6aa4b] rounded-full animate-eq-5"></span>
+                   <span className="w-1.5 bg-[#70a69b] rounded-full animate-eq-6"></span>
+                   <span className="w-1.5 bg-[#9bc6ba] rounded-full animate-eq-7"></span>
+                   <span className="w-1.5 bg-[#70a69b] rounded-full animate-eq-8"></span>
                 </div>
 
                 <div className={`flex items-center space-x-2 text-xs font-medium ${
@@ -219,8 +219,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
         <div className={`rounded-2xl p-4 border shadow-xl flex flex-wrap items-center justify-between gap-3 ${
           isDark 
-            ? 'bg-[#111c33] border-white/10 text-white' 
-            : 'bg-white border-slate-200 text-slate-800 shadow-slate-200/80'
+          ? 'bg-[#173f46] border-white/10 text-white' 
+          : 'bg-[#fbf8f1] border-[#d6ccbc] text-[#173f46] shadow-[#173f46]/10'
         }`}>
           <div className="flex items-center space-x-2 px-2 text-xs font-mono uppercase tracking-wider text-amber-500 font-bold">
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
@@ -231,44 +231,44 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               onClick={() => onSelectSample('welder')}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer flex items-center space-x-1.5 ${
                 isDark 
-                  ? 'bg-slate-800/80 hover:bg-slate-700 border-white/10 hover:border-amber-400 text-white' 
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 hover:border-amber-500 text-slate-800'
+                ? 'bg-[#12383c] hover:bg-[#205359] border-white/10 hover:border-[#e6aa4b] text-white' 
+                : 'bg-[#eee7da] hover:bg-[#e4dacb] border-[#d6ccbc] hover:border-[#d8753b] text-[#173f46]'
               }`}
             >
-              <span>🔥 {t('landing.welder', selectedLanguage)}</span>
+              <span className="flex items-center gap-1.5"><Mic className="w-3 h-3 text-[#d8753b]" />{t('landing.welder', selectedLanguage)}</span>
               <span className="opacity-50 text-[10px]">(Ramesh)</span>
             </button>
             <button
               onClick={() => onSelectSample('tailor')}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer flex items-center space-x-1.5 ${
                 isDark 
-                  ? 'bg-slate-800/80 hover:bg-slate-700 border-white/10 hover:border-amber-400 text-white' 
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 hover:border-amber-500 text-slate-800'
+                ? 'bg-[#12383c] hover:bg-[#205359] border-white/10 hover:border-[#e6aa4b] text-white' 
+                : 'bg-[#eee7da] hover:bg-[#e4dacb] border-[#d6ccbc] hover:border-[#d8753b] text-[#173f46]'
               }`}
             >
-              <span>🧵 {t('landing.tailor', selectedLanguage)}</span>
+              <span className="flex items-center gap-1.5"><MessageSquare className="w-3 h-3 text-[#3f7773]" />{t('landing.tailor', selectedLanguage)}</span>
               <span className="opacity-50 text-[10px]">(Sushila)</span>
             </button>
             <button
               onClick={() => onSelectSample('tractor')}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer flex items-center space-x-1.5 ${
                 isDark 
-                  ? 'bg-slate-800/80 hover:bg-slate-700 border-white/10 hover:border-amber-400 text-white' 
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 hover:border-amber-500 text-slate-800'
+                ? 'bg-[#12383c] hover:bg-[#205359] border-white/10 hover:border-[#e6aa4b] text-white' 
+                : 'bg-[#eee7da] hover:bg-[#e4dacb] border-[#d6ccbc] hover:border-[#d8753b] text-[#173f46]'
               }`}
             >
-              <span>🚜 {t('landing.tractor', selectedLanguage)}</span>
+              <span className="flex items-center gap-1.5"><Monitor className="w-3 h-3 text-[#537e9d]" />{t('landing.tractor', selectedLanguage)}</span>
               <span className="opacity-50 text-[10px]">(Santosh)</span>
             </button>
             <button
               onClick={() => onSelectSample('weaver')}
               className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition cursor-pointer flex items-center space-x-1.5 ${
                 isDark 
-                  ? 'bg-slate-800/80 hover:bg-slate-700 border-white/10 hover:border-amber-400 text-white' 
-                  : 'bg-slate-100 hover:bg-slate-200 border-slate-200 hover:border-amber-500 text-slate-800'
+                ? 'bg-[#12383c] hover:bg-[#205359] border-white/10 hover:border-[#e6aa4b] text-white' 
+                : 'bg-[#eee7da] hover:bg-[#e4dacb] border-[#d6ccbc] hover:border-[#d8753b] text-[#173f46]'
               }`}
             >
-              <span>🧶 {t('landing.weaver', selectedLanguage)}</span>
+              <span className="flex items-center gap-1.5"><Award className="w-3 h-3 text-[#b47a38]" />{t('landing.weaver', selectedLanguage)}</span>
               <span className="opacity-50 text-[10px]">(Murugan)</span>
             </button>
           </div>
@@ -283,8 +283,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={onStartVoice}
             className={`group relative rounded-2xl p-7 border shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${
               isDark 
-                ? 'bg-[#111c33] border-white/10 hover:border-amber-500/50' 
-                : 'bg-white border-slate-200 hover:border-amber-500/50'
+               ? 'bg-[#173f46] border-white/10 hover:border-[#e6aa4b]/60' 
+               : 'bg-[#fbf8f1] border-[#d6ccbc] hover:border-[#d8753b]/60'
             }`}
           >
             <div>
@@ -344,8 +344,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={onOpenWhatsApp}
             className={`group relative rounded-2xl p-7 border shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${
               isDark 
-                ? 'bg-[#111c33] border-white/10 hover:border-emerald-500/50' 
-                : 'bg-white border-slate-200 hover:border-emerald-500/50'
+               ? 'bg-[#173f46] border-white/10 hover:border-[#70a69b]/60' 
+               : 'bg-[#fbf8f1] border-[#d6ccbc] hover:border-[#3f7773]/60'
             }`}
           >
             <div>
@@ -405,8 +405,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             onClick={onOpenKiosk}
             className={`group relative rounded-2xl p-7 border shadow-lg hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer ${
               isDark 
-                ? 'bg-[#111c33] border-white/10 hover:border-sky-500/50' 
-                : 'bg-white border-slate-200 hover:border-sky-500/50'
+               ? 'bg-[#173f46] border-white/10 hover:border-[#7aa9b6]/60' 
+               : 'bg-[#fbf8f1] border-[#d6ccbc] hover:border-[#537e9d]/60'
             }`}
           >
             <div>
@@ -467,8 +467,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className={`rounded-2xl p-7 sm:p-9 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 border relative overflow-hidden ${
           isDark 
-            ? 'bg-[#111c33] border-white/10 text-white' 
-            : 'bg-white border-slate-200 text-slate-900 shadow-slate-200/80'
+               ? 'bg-[#173f46] border-white/10 text-white' 
+               : 'bg-[#fbf8f1] border-[#d6ccbc] text-[#173f46] shadow-[#173f46]/10'
         }`}>
           <div className="space-y-2 text-left relative z-10">
             <div className="inline-flex items-center space-x-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[10px] font-mono tracking-[0.2em] uppercase px-3 py-1 rounded font-bold">
@@ -501,28 +501,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
           <div className={`p-5 rounded-2xl border ${
-            isDark ? 'bg-[#111c33]/70 border-white/5 text-white' : 'bg-white border-slate-200 text-slate-800'
+            isDark ? 'bg-[#173f46]/70 border-white/5 text-white' : 'bg-[#fbf8f1] border-[#d6ccbc] text-[#173f46]'
           }`}>
             <Award className="w-5 h-5 text-amber-500 mx-auto mb-2" />
             <div className="text-xs font-bold tracking-wide uppercase">{t('landing.badge1_title', selectedLanguage)}</div>
             <div className={`text-[11px] mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('landing.badge1_desc', selectedLanguage)}</div>
           </div>
           <div className={`p-5 rounded-2xl border ${
-            isDark ? 'bg-[#111c33]/70 border-white/5 text-white' : 'bg-white border-slate-200 text-slate-800'
+            isDark ? 'bg-[#173f46]/70 border-white/5 text-white' : 'bg-[#fbf8f1] border-[#d6ccbc] text-[#173f46]'
           }`}>
             <Cpu className="w-5 h-5 text-amber-500 mx-auto mb-2" />
             <div className="text-xs font-bold tracking-wide uppercase">{t('landing.badge2_title', selectedLanguage)}</div>
             <div className={`text-[11px] mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('landing.badge2_desc', selectedLanguage)}</div>
           </div>
           <div className={`p-5 rounded-2xl border ${
-            isDark ? 'bg-[#111c33]/70 border-white/5 text-white' : 'bg-white border-slate-200 text-slate-800'
+            isDark ? 'bg-[#173f46]/70 border-white/5 text-white' : 'bg-[#fbf8f1] border-[#d6ccbc] text-[#173f46]'
           }`}>
             <TrendingUp className="w-5 h-5 text-amber-500 mx-auto mb-2" />
             <div className="text-xs font-bold tracking-wide uppercase">{t('landing.badge3_title', selectedLanguage)}</div>
             <div className={`text-[11px] mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('landing.badge3_desc', selectedLanguage)}</div>
           </div>
           <div className={`p-5 rounded-2xl border ${
-            isDark ? 'bg-[#111c33]/70 border-white/5 text-white' : 'bg-white border-slate-200 text-slate-800'
+            isDark ? 'bg-[#173f46]/70 border-white/5 text-white' : 'bg-[#fbf8f1] border-[#d6ccbc] text-[#173f46]'
           }`}>
             <MapPin className="w-5 h-5 text-amber-500 mx-auto mb-2" />
             <div className="text-xs font-bold tracking-wide uppercase">{t('landing.badge4_title', selectedLanguage)}</div>

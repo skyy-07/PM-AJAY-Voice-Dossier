@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies
+# Install dependencies (cached layer if package.json unchanged)
 COPY package.json bun.lock ./
 RUN npm install
 

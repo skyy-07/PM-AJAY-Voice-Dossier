@@ -1,0 +1,97 @@
+import { SupportedLanguage } from '../types.js';
+
+const LANG_KEY = 'pmajay_selected_language';
+const CONSENT_KEY = 'pmajay_consent_granted';
+const CONSENT_TIME_KEY = 'pmajay_consent_timestamp';
+const SESSION_TOKEN_KEY = 'pmajay_session_token';
+
+export interface UserPreferences {
+  language: SupportedLanguage;
+  consentGranted: boolean;
+  consentTimestamp: string | null;
+  sessionToken: string | null;
+}
+
+export const userPreferences = {
+  getLanguage(): SupportedLanguage {
+    try {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved) return saved as SupportedLanguage;
+    } catch {
+      // ignore
+    }
+    return 'hi';
+  },
+
+  setLanguage(lang: SupportedLanguage): void {
+    try {
+      localStorage.setItem(LANG_KEY, lang);
+      window.dispatchEvent(new CustomEvent('pmajay_preference_change', {
+        detail: { type: 'language', value: lang }
+      }));
+    } catch {
+      // ignore
+    }
+  },
+
+  getConsent(): boolean {
+    try {
+      return localStorage.getItem(CONSENT_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  },
+
+  setConsent(granted: boolean): void {
+    try {
+      if (granted) {
+        localStorage.setItem(CONSENT_KEY, 'true');
+        const ts = new Date().toISOString();
+        localStorage.setItem(CONSENT_TIME_KEY, ts);
+        const token = `PMAJAY-AUTH-${Date.now()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+        localStorage.setItem(SESSION_TOKEN_KEY, token);
+      } else {
+        localStorage.removeItem(CONSENT_KEY);
+        localStorage.removeItem(CONSENT_TIME_KEY);
+        localStorage.removeItem(SESSION_TOKEN_KEY);
+      }
+      window.dispatchEvent(new CustomEvent('pmajay_preference_change', {
+        detail: { type: 'consent', value: granted }
+      }));
+    } catch {
+      // ignore
+    }
+  },
+
+  getAll(): UserPreferences {
+    try {
+      return {
+        language: this.getLanguage(),
+        consentGranted: this.getConsent(),
+        consentTimestamp: localStorage.getItem(CONSENT_TIME_KEY),
+        sessionToken: localStorage.getItem(SESSION_TOKEN_KEY)
+      };
+    } catch {
+      return {
+        language: 'hi',
+        consentGranted: false,
+        consentTimestamp: null,
+        sessionToken: null
+      };
+    }
+  },
+
+  reset(): void {
+    try {
+      localStorage.removeItem(LANG_KEY);
+      localStorage.removeItem(CONSENT_KEY);
+      localStorage.removeItem(CONSENT_TIME_KEY);
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+      window.dispatchEvent(new CustomEvent('pmajay_preference_change', {
+        detail: { type: 'reset' }
+      }));
+    } catch {
+      // ignore
+    }
+  }
+};

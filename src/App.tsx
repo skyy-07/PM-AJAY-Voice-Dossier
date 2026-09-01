@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header.js';
 import { TalkBackBar } from './components/common/TalkBackBar.js';
 import { LandingPage } from './components/landing/LandingPage.js';
@@ -7,19 +7,23 @@ import { LanguageSelectScreen } from './components/beneficiary/LanguageSelectScr
 import { VoiceInterviewScreen } from './components/beneficiary/VoiceInterviewScreen.js';
 import { ProfileConfirmScreen } from './components/beneficiary/ProfileConfirmScreen.js';
 import { RecommendationsScreen } from './components/beneficiary/RecommendationsScreen.js';
+import { MobileAppExperience } from './components/mobile/MobileAppExperience.js';
 import { WhatsAppSimulator } from './components/whatsapp/WhatsAppSimulator.js';
 import { OfflineKioskScreen } from './components/kiosk/OfflineKioskScreen.js';
 import { AdminDashboard } from './components/admin/AdminDashboard.js';
+import { MobileBottomNav } from './components/common/MobileBottomNav.js';
 import { DemoConversationModal } from './components/common/DemoConversationModal.js';
 import { HumanHelpModal } from './components/common/HumanHelpModal.js';
 import { ThemeProvider, useTheme } from './context/ThemeContext.js';
 
 import { SupportedLanguage, UserRole, CandidateProfile, ActiveInterviewSession } from './types.js';
 import { api } from './lib/api.js';
+import { userPreferences } from './lib/userPreferences.js';
 
 function MainApp() {
   const [currentView, setCurrentView] = useState<string>('landing');
-  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>('hi');
+  const [selectedLanguage, setSelectedLanguage] = useState<SupportedLanguage>(() => userPreferences.getLanguage());
+  const [hasGivenConsent, setHasGivenConsent] = useState<boolean>(() => userPreferences.getConsent());
   const [currentRole, setCurrentRole] = useState<UserRole>('beneficiary');
   
   const { theme } = useTheme();
@@ -33,22 +37,48 @@ function MainApp() {
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
   const [isEscalationModalOpen, setIsEscalationModalOpen] = useState(false);
 
-  // 1. Start Voice Interview Flow
-  const handleStartVoice = () => {
-    setCurrentView('beneficiary_consent');
+  // Sync state if preference events fire across components
+  useEffect(() => {
+    const handlePrefChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.type === 'language') {
+        setSelectedLanguage(customEvent.detail.value);
+      } else if (customEvent.detail?.type === 'consent') {
+        setHasGivenConsent(customEvent.detail.value);
+      } else if (customEvent.detail?.type === 'reset') {
+        setSelectedLanguage('hi');
+        setHasGivenConsent(false);
+      }
+    };
+
+    window.addEventListener('pmajay_preference_change', handlePrefChange);
+    return () => window.removeEventListener('pmajay_preference_change', handlePrefChange);
+  }, []);
+
+  // Update language and persist
+  const handleSelectLanguage = (lang: SupportedLanguage) => {
+    setSelectedLanguage(lang);
+    userPreferences.setLanguage(lang);
+    if (activeSession) {
+      setActiveSession(prev => prev ? { ...prev, language: lang === 'auto' ? 'hi' : lang } : null);
+    }
   };
 
-  // 2. Consent given -> Go to language or directly to interview
-  const handleConsentGiven = async () => {
-    setCurrentView('beneficiary_language');
+  // Toggle/Set consent and persist
+  const handleToggleConsent = (granted: boolean) => {
+    setHasGivenConsent(granted);
+    userPreferences.setConsent(granted);
   };
 
-  // 3. Language chosen -> Initialize interview session
-  const handleLanguageProceed = async () => {
+  // Initialize or resume interview session directly without redundant screens
+  const startOrResumeInterview = async (langOverride?: SupportedLanguage) => {
+    const lang = langOverride || selectedLanguage;
+    const langCode = lang === 'auto' ? 'hi' : lang;
+
     try {
       const res = await api.startInterview({
         channel: 'voice_call',
-        language: selectedLanguage === 'auto' ? 'hi' : selectedLanguage,
+        language: langCode,
         consentGiven: true
       });
       setActiveSession(res.session);
@@ -57,6 +87,46 @@ function MainApp() {
     } catch (err) {
       console.error('Failed to start interview:', err);
     }
+  };
+
+  // 1. Start Voice Interview Flow
+  const handleStartVoice = async () => {
+    if (hasGivenConsent) {
+      // User has already granted consent -> Go straight to interview using stored language
+      await startOrResumeInterview();
+    } else {
+      // Prompt for consent once
+      setCurrentView('beneficiary_consent');
+    }
+  };
+
+  // 2. Consent given -> Store consent and proceed directly to interview using stored language
+  const handleConsentGiven = async () => {
+    handleToggleConsent(true);
+    await startOrResumeInterview();
+  };
+
+  // 3. Language chosen explicitly -> Store language and enter interview session
+  const handleLanguageProceed = async () => {
+    handleToggleConsent(true);
+    await startOrResumeInterview(selectedLanguage);
+  };
+
+  // Router dispatcher
+  const handleSelectView = async (view: string) => {
+    if (view === 'beneficiary_interview' || view === 'beneficiary') {
+      if (hasGivenConsent) {
+        if (!activeSession) {
+          await startOrResumeInterview();
+        } else {
+          setCurrentView('beneficiary_interview');
+        }
+      } else {
+        setCurrentView('beneficiary_consent');
+      }
+      return;
+    }
+    setCurrentView(view);
   };
 
   // 4. Interview complete -> Confirmation screen
@@ -90,9 +160,9 @@ function MainApp() {
       {/* Universal Header */}
       <Header
         currentView={currentView}
-        onSelectView={(view) => setCurrentView(view)}
+        onSelectView={handleSelectView}
         selectedLanguage={selectedLanguage}
-        onSelectLanguage={(lang) => setSelectedLanguage(lang)}
+        onSelectLanguage={handleSelectLanguage}
         currentRole={currentRole}
         onChangeRole={(role) => setCurrentRole(role)}
         onOpenDemo={() => setIsDemoModalOpen(true)}
@@ -106,15 +176,19 @@ function MainApp() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 relative">
+      <main className="flex-1 relative pb-20 md:pb-6">
         {currentView === 'landing' && (
           <LandingPage
             onStartVoice={handleStartVoice}
             onOpenWhatsApp={() => setCurrentView('whatsapp')}
             onOpenKiosk={() => setCurrentView('kiosk')}
             onOpenAdmin={() => setCurrentView('admin')}
+            onOpenMobile={() => setCurrentView('mobile')}
             onSelectSample={handleSelectSample}
             selectedLanguage={selectedLanguage}
+            onSelectLanguage={handleSelectLanguage}
+            hasGivenConsent={hasGivenConsent}
+            onToggleConsent={handleToggleConsent}
           />
         )}
 
@@ -129,9 +203,15 @@ function MainApp() {
         {currentView === 'beneficiary_language' && (
           <LanguageSelectScreen
             selectedLanguage={selectedLanguage}
-            onSelectLanguage={(l) => setSelectedLanguage(l)}
+            onSelectLanguage={handleSelectLanguage}
             onProceed={handleLanguageProceed}
-            onBack={() => setCurrentView('beneficiary_consent')}
+            onBack={() => {
+              if (activeSession) {
+                setCurrentView('beneficiary_interview');
+              } else {
+                setCurrentView('landing');
+              }
+            }}
           />
         )}
 
@@ -161,6 +241,10 @@ function MainApp() {
             selectedLanguage={selectedLanguage}
             onRestart={() => setCurrentView('landing')}
           />
+        )}
+
+        {currentView === 'mobile' && (
+          <MobileAppExperience onExit={() => setCurrentView('landing')} />
         )}
 
         {currentView === 'whatsapp' && <WhatsAppSimulator />}
@@ -204,6 +288,16 @@ function MainApp() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile-First Bottom Navigation Bar */}
+      <MobileBottomNav
+        currentView={currentView}
+        onSelectView={handleSelectView}
+        selectedLanguage={selectedLanguage}
+        onSelectLanguage={handleSelectLanguage}
+        onOpenDemo={() => setIsDemoModalOpen(true)}
+        onOpenEscalationModal={() => setIsEscalationModalOpen(true)}
+      />
 
       {/* Modals */}
       <DemoConversationModal

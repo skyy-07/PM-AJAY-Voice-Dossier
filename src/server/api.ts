@@ -263,7 +263,9 @@ apiRouter.post('/interviews/:id/message', async (req: Request, res: Response) =>
   res.json({
     session,
     candidate: updatedCandidate,
-    dialogueResult
+    replyMessage: assistantMsg,
+    dialogueResult,
+    isComplete: dialogueResult.isProfileComplete
   });
 });
 
@@ -273,24 +275,33 @@ apiRouter.post('/interviews/:id/audio', async (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Session not found' });
   }
 
-  const { audioBase64, simulatedText } = req.body;
+  const { audioBase64, simulatedText, text } = req.body;
+  const inputText = text || simulatedText;
 
   // Run speech pipeline
   await AudioPreprocessor.process(audioBase64 || '');
   const transResult = await SpeechToTextService.transcribe(
-    simulatedText ? `DEMO:${simulatedText}` : 'DEMO:Main pichhle 5 saal se welding aur iron gate fabrication ka kaam karta hoon.',
+    inputText ? `DEMO:${inputText}` : (audioBase64 || ''),
     session.language as SupportedLanguage
   );
 
+  const cleanTranscript = (transResult.transcript || '').trim();
+  if (!cleanTranscript) {
+    return res.status(400).json({ 
+      error: 'NO_SPEECH_DETECTED', 
+      message: 'No speech was detected in the audio recording. Please speak clearly into your microphone.' 
+    });
+  }
+
   // Send transcription into message processing
-  req.body.text = transResult.transcript;
+  req.body.text = cleanTranscript;
   req.body.audioUrl = '/simulated-audio.wav';
 
   // Process dialogue turn
   const userMsg: InterviewMessage = {
     id: `MSG-${Date.now()}-U`,
     sender: 'user',
-    text: transResult.transcript,
+    text: cleanTranscript,
     audioUrl: req.body.audioUrl,
     language: session.language,
     timestamp: new Date().toISOString(),
@@ -313,7 +324,8 @@ apiRouter.post('/interviews/:id/audio', async (req: Request, res: Response) => {
     text: dialogueResult.assistantReplyText,
     language: session.language,
     timestamp: new Date().toISOString(),
-    confidence: dialogueResult.confidence
+    confidence: dialogueResult.confidence,
+    detectedSlots: dialogueResult.detectedSlots
   };
   session.messages.push(assistantMsg);
 
@@ -329,7 +341,9 @@ apiRouter.post('/interviews/:id/audio', async (req: Request, res: Response) => {
     transcription: transResult,
     session,
     candidate: updatedCandidate,
-    dialogueResult
+    replyMessage: assistantMsg,
+    dialogueResult,
+    isComplete: dialogueResult.isProfileComplete
   });
 });
 

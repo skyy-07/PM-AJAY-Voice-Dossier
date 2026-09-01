@@ -31,14 +31,62 @@ export const OfflineKioskScreen: React.FC = () => {
       setIsRecording(false);
       await audioController.stopRecording();
 
+      const candidateId = `BEN-KIOSK-${Date.now().toString().slice(-4)}`;
+      const candidate: CandidateProfile = {
+        candidateId,
+        name: activeCandidateName || 'Kiosk Beneficiary',
+        phone: '+91 98765 ' + Math.floor(10000 + Math.random() * 90000),
+        age: 28,
+        gender: 'unspecified',
+        location: {
+          village: 'Pipri Gram Panchayat',
+          district: 'Varanasi',
+          state: 'Uttar Pradesh',
+          latitude: 25.3176,
+          longitude: 82.9739
+        },
+        language: 'hi',
+        currentOccupation: activeTrade || 'Masonry & Plastering',
+        previousOccupations: [],
+        familyOccupation: 'Rural Construction',
+        skills: [activeTrade || 'Masonry & Plastering', 'Rural Construction'],
+        tools: ['Trowel', 'Plumb Bob', 'Spirit Level'],
+        experience: [{
+          tradeOrActivity: activeTrade || 'Masonry & Plastering',
+          yearsOfExperience: 5,
+          isFamilyOccupation: false,
+          informalOrFormal: 'informal',
+          description: 'Rural masonry and plastering'
+        }],
+        incomeSources: ['Daily construction wages'],
+        seasonalWork: [],
+        interests: ['Masonry Certification', 'PM-AJAY Tool Kit'],
+        aspirations: ['Contractor License'],
+        employmentPreference: 'both',
+        selfEmploymentInterest: true,
+        education: '8th Standard',
+        literacyLevel: 'basic_literacy',
+        mobility: { willingToTravel: true, maxDistanceKm: 15, willingToMigrate: false },
+        physicalConstraints: [],
+        familyConstraints: [],
+        priorTrainingHistory: [],
+        rplSignals: ['5 years practical masonry experience'],
+        profileConfidence: 92,
+        missingFields: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        isConfirmed: true
+      };
+
       // Add to offline queue
       const newRecord: SyncQueueRecord = {
         id: `OFF-${Date.now().toString().slice(-4)}`,
-        candidateId: `BEN-KIOSK-${Date.now().toString().slice(-3)}`,
+        candidateId,
         action: 'NEW_ASSESSMENT',
+        candidate,
         payload: {
-          name: activeCandidateName || 'Kiosk Beneficiary',
-          trade: activeTrade || 'Masonry & Plastering',
+          name: candidate.name,
+          trade: candidate.currentOccupation,
           village: 'Pipri Gram Panchayat',
           experienceYears: 5
         },
@@ -186,7 +234,7 @@ export const OfflineKioskScreen: React.FC = () => {
                   Local Kiosk Storage Queue
                 </h3>
               </div>
-              <span className="bg-amber-500/10 border border-amber-500/30 text-amber-300 font-mono text-[10px] px-2.5 py-0.5 rounded">
+              <span className="bg-amber-500/10 border border-amber-500/30 text-amber-700 font-mono text-[10px] px-2.5 py-0.5 rounded">
                 {offlineQueue.length} Pending
               </span>
             </div>
@@ -213,7 +261,7 @@ export const OfflineKioskScreen: React.FC = () => {
                     <div className="text-white/60 font-light">
                       Trade: <span className="font-medium text-white/90">{item.payload.trade}</span> ({item.payload.experienceYears} yrs)
                     </div>
-                    <div className="flex justify-between items-center text-[10px] text-white/40 pt-1 border-t border-white/5 font-mono">
+                    <div className="flex justify-between items-center text-[10px] text-amber-400 pt-1 border-t border-white/5 font-mono">
                       <span>{item.payload.village}</span>
                       <span className="flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
@@ -231,8 +279,8 @@ export const OfflineKioskScreen: React.FC = () => {
               disabled={offlineQueue.length === 0 || isSyncing}
               className={`mt-5 w-full py-3.5 rounded-xl font-semibold text-xs tracking-wider uppercase shadow-xl flex items-center justify-center space-x-2 transition cursor-pointer ${
                 offlineQueue.length === 0
-                  ? 'bg-[#222222] text-white/20 border border-white/5 cursor-not-allowed'
-                  : 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/20'
+                  ? 'bg-[#222222dc] text-amber-400 border border-white/5 cursor-not-allowed'
+                  : 'bg-amber-500 hover:bg-amber-400 text-stone-950 shadow-amber-500/40'
               }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />

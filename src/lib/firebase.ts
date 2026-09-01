@@ -6,6 +6,7 @@ import {
   setDoc, 
   getDoc, 
   getDocs, 
+  getDocFromServer,
   updateDoc, 
   query, 
   where, 
@@ -48,13 +49,68 @@ export const COLLECTIONS = {
 };
 
 export const cloudService = {
+  // 0. Database Connection Verification
+  async checkConnection(): Promise<{ connected: boolean; latencyMs: number; databaseId: string; error?: string }> {
+    const startTime = Date.now();
+    try {
+      await ensureAuth();
+      const statusRef = doc(db, COLLECTIONS.SYSTEM_STATUS, 'connectivity_ping');
+      await setDoc(statusRef, {
+        lastPing: new Date().toISOString(),
+        client: 'PM-AJAY-Admin-Web',
+        _syncedAt: serverTimestamp()
+      }, { merge: true });
+      
+      const snap = await getDocFromServer(statusRef);
+      const latencyMs = Date.now() - startTime;
+      return {
+        connected: snap.exists(),
+        latencyMs,
+        databaseId: firebaseConfig.firestoreDatabaseId || 'default'
+      };
+    } catch (err: any) {
+      console.warn('Firestore connection check error:', err);
+      return {
+        connected: false,
+        latencyMs: Date.now() - startTime,
+        databaseId: firebaseConfig.firestoreDatabaseId || 'default',
+        error: err?.message || 'Connection failed'
+      };
+    }
+  },
+
+  // Auto-seed Firestore if collection is empty
+  async seedFirestoreIfEmpty(candidates: CandidateProfile[], escalations?: HumanEscalation[]): Promise<void> {
+    try {
+      await ensureAuth();
+      const snap = await getDocs(query(collection(db, COLLECTIONS.CANDIDATES), limit(1)));
+      if (snap.empty && candidates.length > 0) {
+        console.log('Seeding initial candidates to Cloud Firestore...');
+        for (const cand of candidates) {
+          await this.saveCandidate(cand);
+        }
+      }
+
+      if (escalations && escalations.length > 0) {
+        const escSnap = await getDocs(query(collection(db, COLLECTIONS.ESCALATIONS), limit(1)));
+        if (escSnap.empty) {
+          for (const esc of escalations) {
+            await this.saveEscalation(esc);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Firestore auto-seed notice:', err);
+    }
+  },
+
   // 1. Candidate Real-Time Ops
   async saveCandidate(candidate: CandidateProfile): Promise<void> {
     await ensureAuth();
     const candidateRef = doc(db, COLLECTIONS.CANDIDATES, candidate.candidateId);
     await setDoc(candidateRef, {
       ...candidate,
-      updatedAt: new Date().toISOString(),
+      updatedAt: candidate.updatedAt || new Date().toISOString(),
       _syncedAt: serverTimestamp()
     }, { merge: true });
   },
@@ -80,8 +136,8 @@ export const cloudService = {
       snapshot.forEach(docSnap => {
         list.push(docSnap.data() as CandidateProfile);
       });
-      // Sort in-memory by updatedAt desc
-      list.sort((a, b) => new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime());
+      // Sort in-memory by updatedAt or createdAt desc
+      list.sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime());
       onUpdate(list);
     }, (error) => {
       console.warn('Firestore listenToCandidates error:', error);
@@ -168,3 +224,4 @@ export const cloudService = {
     }
   }
 };
+

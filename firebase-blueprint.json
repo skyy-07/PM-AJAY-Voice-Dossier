@@ -1,0 +1,190 @@
+{
+  "entities": {
+    "Candidate": {
+      "title": "Candidate",
+      "description": "PM-AJAY Beneficiary Profile created and enriched via Indic Voice, WhatsApp, or Kiosk interviews",
+      "type": "object",
+      "properties": {
+        "candidateId": {
+          "type": "string",
+          "description": "Unique beneficiary identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Beneficiary full name"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Beneficiary phone number"
+        },
+        "language": {
+          "type": "string",
+          "description": "Preferred Indic spoken language"
+        },
+        "currentOccupation": {
+          "type": "string",
+          "description": "Extracted current trade or practical work"
+        },
+        "skills": {
+          "type": "array",
+          "description": "List of reported or verified trade skills"
+        },
+        "location": {
+          "type": "object",
+          "description": "Geographical location details"
+        },
+        "profileConfidence": {
+          "type": "number",
+          "description": "AI extraction confidence score (0-100)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation ISO timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last updated ISO timestamp"
+        }
+      },
+      "required": ["candidateId", "name", "language"]
+    },
+    "HumanEscalation": {
+      "title": "HumanEscalation",
+      "description": "Officer assistance queue item for complex beneficiary needs",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique escalation identifier"
+        },
+        "candidateId": {
+          "type": "string",
+          "description": "Beneficiary ID needing assistance"
+        },
+        "candidateName": {
+          "type": "string",
+          "description": "Beneficiary name"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for escalation"
+        },
+        "priority": {
+          "type": "string",
+          "description": "Escalation priority (High/Medium/Low)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Status (Open/In Progress/Resolved)"
+        },
+        "district": {
+          "type": "string",
+          "description": "Target district for BDO routing"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Creation ISO timestamp"
+        }
+      },
+      "required": ["id", "candidateId", "status"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable PM-AJAY system audit log for governance",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique audit log identifier"
+        },
+        "actorId": {
+          "type": "string",
+          "description": "ID of actor initiating event"
+        },
+        "actorRole": {
+          "type": "string",
+          "description": "Role of actor"
+        },
+        "action": {
+          "type": "string",
+          "description": "Action performed"
+        },
+        "entityType": {
+          "type": "string",
+          "description": "Type of entity modified"
+        },
+        "entityId": {
+          "type": "string",
+          "description": "Target entity ID"
+        },
+        "details": {
+          "type": "string",
+          "description": "Descriptive event details"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of event"
+        }
+      },
+      "required": ["id", "action", "timestamp"]
+    },
+    "Recommendation": {
+      "title": "Recommendation",
+      "description": "NSQF skilling or enterprise opportunity matched for a candidate",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique recommendation identifier"
+        },
+        "candidateId": {
+          "type": "string",
+          "description": "Associated candidate ID"
+        },
+        "qualificationPackId": {
+          "type": "string",
+          "description": "Qualification pack code"
+        },
+        "tradeTitle": {
+          "type": "string",
+          "description": "Trade title"
+        },
+        "matchScore": {
+          "type": "number",
+          "description": "Match score (0-100)"
+        },
+        "status": {
+          "type": "string",
+          "description": "Opportunity status"
+        }
+      },
+      "required": ["id", "candidateId", "tradeTitle"]
+    }
+  },
+  "firestore": {
+    "/candidates/{candidateId}": {
+      "schema": {
+        "$ref": "#/entities/Candidate"
+      },
+      "description": "Real-time candidate profile repository"
+    },
+    "/escalations/{escalationId}": {
+      "schema": {
+        "$ref": "#/entities/HumanEscalation"
+      },
+      "description": "Queue of beneficiary issues routed to Block Development Officers"
+    },
+    "/audit_logs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/AuditLog"
+      },
+      "description": "Immutable governance audit records"
+    },
+    "/recommendations/{recommendationId}": {
+      "schema": {
+        "$ref": "#/entities/Recommendation"
+      },
+      "description": "Matched NSQF pathways for beneficiaries"
+    }
+  }
+}
