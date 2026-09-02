@@ -2085,6 +2085,171 @@ export const REAL_JOBS_CATALOGUE: RealJobRole[] = [
       en: '100% Online Portal (0 km • WFH training & immediate job linkage with headset/phone)',
     },
   },
+
+  // Added realistic jobs for Pune, Madurai and Varanasi (issue #14)
+  {
+    id: 'job_pune_ev_mechanic',
+    jobTitle: 'Two-Wheeler EV & Scooter Mechanic (Pune)',
+    nsqfLevel: 4,
+    nsqfQpCode: 'ASC/Q1411',
+    sector: 'Automotive & EV',
+    category: 'hybrid',
+    demandLevel: 'High',
+    jobDescription:
+      'Service and repair electric scooters, e-rickshaws and BLDC hub-motor vehicles; perform battery diagnostics, BMS checks, controller calibration and basic charging-station maintenance for Pune suburban market.',
+    keyDuties: [
+      'Diagnose BLDC hub motors and motor controllers',
+      'Perform battery module replacements and BMS health checks',
+      'Routine servicing: brakes, tyres, electrical connectors and charging ports',
+      'Assist in installation and basic upkeep of local charging points',
+    ],
+    toolsEquipment: [
+      'Digital Multimeter, Battery Analyzer, Motor Puller, Torque Wrench, Insulation Tester',
+    ],
+    hiringEmployers: [
+      'Pune EV Service Hubs',
+      'Local 2W Dealerships & Charging Station Operators',
+      'Last-mile EV Logistics Providers',
+    ],
+    salaryRange: '₹16,000 - ₹28,000 / month',
+    dailyWage: '₹700 - ₹1,100 / day',
+    employmentType: 'Wage Employment / Workshop Mechanic',
+    activeVacanciesCount: 12,
+    minEducation: '8th - 10th Pass',
+    experienceRequired: 'Apprenticeship / Freshers with EV training welcome',
+    durationMonths: 3,
+    expectedMonthlyEarning: '₹16,000 - ₹28,000',
+    district: 'Pune',
+    block: 'Pune Suburban',
+    locationName: 'Pimpri-Chinchwad EV Service Cluster',
+    distanceKm: 6.5,
+    travelTimeMinutes: 18,
+    commuteMode: 'Local Bus / Shared Auto',
+    hostelAvailable: false,
+    trainingCenterId: 'center_pmajay_pune',
+    localizedJobTitles: {
+      hi: 'ईवी व टू-व्हीलर मैकेनिक (पुणे)',
+      mr: 'EV व दुचाकी मेकॅनिक (पुणे)',
+      ta: 'இருசக்கர வாகன் & EV மெக்கானிக் (புனே)',
+      en: 'Two-Wheeler EV & Scooter Mechanic (Pune)',
+    },
+    localizedDescriptions: {
+      en:
+        'Field technician role servicing electric scooters and small EVs: battery & motor diagnostics, basic BMS checks, and charging port maintenance for urban repair shops.',
+    },
+    localizedDuties: {
+      en: [
+        'Battery diagnostics and module replacement',
+        'BLDC motor testing and controller calibration',
+        'Routine servicing of brakes and drivetrain',
+        'Support local charging infrastructure maintenance',
+      ],
+    },
+    localizedLocation: { en: 'Pimpri-Chinchwad EV Service Cluster (6.5 km • Local transit)' },
+  },
+
+  {
+    id: 'job_madurai_dairy_assistant',
+    jobTitle: 'Dairy Farm & Milk Collection Assistant (Madurai)',
+    nsqfLevel: 3,
+    nsqfQpCode: 'AGR/Q4101',
+    sector: 'Agriculture & Animal Husbandry',
+    category: 'self_employment',
+    demandLevel: 'Medium',
+    jobDescription:
+      'Hygienic milk collection, basic milk quality testing (fat & SNF), cold-chain handling and record-keeping for cooperative milk collection centers around Madurai.',
+    keyDuties: [
+      'Collect and perform milk fat & SNF testing using portable analyzers',
+      'Maintain hygienic handling and chilling of milk cans',
+      'Assist in daily quality records and cooperative invoicing',
+      'Coordinate small-scale milk collection logistics and bundling',
+    ],
+    toolsEquipment: ['Milk Analyzer (Fat/SNF), Chiller Unit, pH Meter'],
+    hiringEmployers: ['Madurai District Milk Cooperative', 'Local Milk Collection Centers'],
+    salaryRange: '₹13,000 - ₹22,000 / month',
+    dailyWage: '₹550 - ₹850 / day',
+    employmentType: 'Wage Employment / Cooperative Assistant',
+    activeVacanciesCount: 10,
+    minEducation: 'No formal requirement',
+    experienceRequired: 'On-the-job training provided',
+    durationMonths: 1.5,
+    expectedMonthlyEarning: '₹14,000 - ₹22,000',
+    district: 'Madurai',
+    block: 'Madurai North',
+    locationName: 'Madurai Milk Collection & Chilling Centre',
+    distanceKm: 7.0,
+    travelTimeMinutes: 20,
+    commuteMode: 'Local Bus / Auto',
+    hostelAvailable: false,
+    trainingCenterId: 'center_pmajay_madurai',
+    localizedJobTitles: {
+      ta: 'டெய்ரி பால் சேகரிப்பு உதவியாளர் (மதுரை)',
+      en: 'Dairy Farm & Milk Collection Assistant (Madurai)',
+    },
+    localizedDescriptions: {
+      en:
+        'Role focused on hygienic milk collection, basic testing, chilling and supporting cooperative milk aggregation for local dairy supply chains.',
+    },
+    localizedDuties: {
+      en: [
+        'Milk fat & SNF testing with portable analyzers',
+        'Sanitized handling and chilling of milk cans',
+        'Record keeping of daily collections and quality checks',
+      ],
+    },
+    localizedLocation: { en: 'Madurai Milk Collection Centre (7 km • Local transit)' },
+  },
+
+  {
+    id: 'job_varanasi_tailor_sewing',
+    jobTitle: 'Self-Employed Tailor & Boutique Master (Varanasi)',
+    nsqfLevel: 4,
+    nsqfQpCode: 'AMH/Q1947',
+    sector: 'Apparel & Garments',
+    category: 'self_employment',
+    demandLevel: 'High',
+    jobDescription:
+      'Stitching, alterations and boutique tailoring focused on local weaving clusters, ritual garments and tourist markets around Varanasi (Sevapuri).',
+    keyDuties: [
+      'Custom tailoring for sarees and tourist garments',
+      'Pattern cutting, hemming and minor repairs',
+      'Managing small boutique orders and customer fittings',
+    ],
+    toolsEquipment: ['Lockstitch Machine, Overlock, Tailoring Kit'],
+    hiringEmployers: ['Self-Employed / Local Boutique Shops', 'Tourist Garment Sellers'],
+    salaryRange: '₹12,000 - ₹24,000 / month',
+    dailyWage: '₹500 - ₹1,200 / day',
+    employmentType: 'Self-Employment / Boutique Tailor',
+    activeVacanciesCount: 14,
+    minEducation: 'No formal requirement',
+    experienceRequired: 'Basic sewing skills',
+    durationMonths: 2,
+    expectedMonthlyEarning: '₹12,000 - ₹25,000',
+    district: 'Varanasi',
+    block: 'Sevapuri',
+    locationName: 'Sevapuri Tailoring & Micro-Boutique Cluster',
+    distanceKm: 5.5,
+    travelTimeMinutes: 15,
+    commuteMode: 'Local Bus / Shared Auto',
+    hostelAvailable: false,
+    trainingCenterId: 'center_pmajay_varanasi',
+    localizedJobTitles: {
+      hi: 'स्व-रोज़गार दर्जी / बुटीक मास्टर (वाराणसी)',
+      en: 'Self-Employed Tailor & Boutique Master (Varanasi)',
+    },
+    localizedDescriptions: {
+      en:
+        'Tailor role serving local saree-weaving clusters and tourist-focused garment customization and alterations.',
+    },
+    localizedDuties: {
+      en: [
+        'Pattern cutting and tailoring for sarees and salwar-kurta',
+        'Stitching boutique orders and minor repairs',
+        'Customer fittings and alteration services',
+      ],
+    },
+    localizedLocation: { en: 'Sevapuri Micro-Boutique Cluster, Varanasi (5.5 km • Local transit)' },
+  },
 ];
 
 
