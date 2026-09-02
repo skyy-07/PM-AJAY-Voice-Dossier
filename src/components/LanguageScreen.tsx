@@ -42,18 +42,23 @@ export const LanguageScreen: React.FC<LanguageScreenProps> = ({
       // Fallback: prompt sample utterance or direct API check
       setDetectionError('Voice recognition not supported in this browser. Please select below.');
       setIsDetecting(false);
+      setAutoDetectMode(false);
       return;
     }
 
     try {
       const recognition = new SpeechRecognitionClass();
-      recognition.continuous = false;
-      recognition.interimResults = false;
+      // Keep listening until user stops explicitly so the UI doesn't close immediately
+      recognition.continuous = true;
+      // Allow interim results so short utterances don't immediately end the session
+      recognition.interimResults = true;
       // Default to general Indian multilingual or Hindi recognizer for initial phonetic capture
       recognition.lang = 'hi-IN';
 
       recognition.onresult = async (event: any) => {
-        const spokenText = event.results[0][0]?.transcript || '';
+        // Use the latest result from results list
+        const lastIndex = event.results.length - 1;
+        const spokenText = event.results[lastIndex][0]?.transcript || '';
         if (spokenText.trim()) {
           try {
             const res = await fetch('/api/language/detect', {
@@ -64,27 +69,41 @@ export const LanguageScreen: React.FC<LanguageScreenProps> = ({
             const result: LanguageDetectionResult = await res.json();
             setAutoDetectedInfo(result);
             onSelectLanguage(result.detectedLanguage);
+            // Keep auto-detect mode enabled until user explicitly stops
+            // but mark detection as finished for UI feedback
+            setIsDetecting(false);
+            setAutoDetectMode(false);
+            recognition.stop();
           } catch (e) {
             console.error('Detection API error:', e);
+            setDetectionError('Failed to detect language via API.');
+            setIsDetecting(false);
+            setAutoDetectMode(false);
+            recognition.stop();
           }
         }
-        setIsDetecting(false);
       };
 
       recognition.onerror = (e: any) => {
         console.warn('Auto-detect speech error:', e);
+        setDetectionError(e?.error || 'Speech recognition error');
         setIsDetecting(false);
+        setAutoDetectMode(false);
       };
 
       recognition.onend = () => {
+        // If autoDetectMode was turned off by user, keep UI consistent
         setIsDetecting(false);
+        setAutoDetectMode(false);
       };
 
       recognitionRef.current = recognition;
       recognition.start();
     } catch (err) {
       console.warn('Failed to start speech recognition for detection:', err);
+      setDetectionError('Unable to access microphone. Check permissions.');
       setIsDetecting(false);
+      setAutoDetectMode(false);
     }
   };
 
@@ -159,8 +178,19 @@ export const LanguageScreen: React.FC<LanguageScreenProps> = ({
         {/* Action Button for Voice Detection */}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <button
-            onClick={handleStartAutoDetect}
-            disabled={isDetecting}
+            onClick={isDetecting
+              ? () => {
+                  // Stop active recognition when user clicks while detecting
+                  try {
+                    recognitionRef.current?.stop();
+                  } catch (e) {
+                    /* ignore */
+                  }
+                  setIsDetecting(false);
+                  setAutoDetectMode(false);
+                }
+              : handleStartAutoDetect
+            }
             className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-xs ${
               isDetecting
                 ? 'bg-amber-500 text-white animate-pulse'
