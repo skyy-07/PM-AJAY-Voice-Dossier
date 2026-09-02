@@ -29,7 +29,7 @@ Built for **Smart India Hackathon (SIH)** — Ministry of Social Justice & Empow
 | Frontend | React 19, TypeScript, TailwindCSS 4, Motion, Recharts, D3.js |
 | Backend | Node.js, Express 4, TypeScript (tsx) |
 | AI / NLU | Google Gemini API (`@google/genai`) with structured JSON output |
-| Speech | IndicWhisper, IndicTTS, Bhashini APIs (adapter layer) |
+| Speech | IndicWhisper (gemini API for the prototype) (adapter layer) |
 | Vector Search | In-memory cosine term-frequency engine (Qdrant-ready) |
 | Database | In-memory store + Cloud Firestore (real-time sync) |
 | Offline | IndexedDB via Panchayat Kiosk with batch sync |
