@@ -646,35 +646,91 @@ async function startServer() {
   app.get('/api/admin/dashboard', (req, res) => {
     const allCandidates = Array.from(db.candidates.values());
     const allSessions = Array.from(db.sessions.values());
+    const allProgress = Array.from(db.progress.values());
     const completedSessions = allSessions.filter((s) => s.status === 'completed');
 
-    const completionRate = allSessions.length > 0 ? Math.round((completedSessions.length / allSessions.length) * 100) : 88;
+    const completionRate = allSessions.length > 0
+      ? Math.round((completedSessions.length / allSessions.length) * 100)
+      : 100;
 
-    const districtDemand = [
-      { district: 'Nadia', demandTrade: 'Electrician & Solar', beneficiaries: 142, completionRate: 91, lat: 23.18, lng: 88.58 },
-      { district: 'Purba Bardhaman', demandTrade: 'Tailoring & Dairy', beneficiaries: 118, completionRate: 85, lat: 23.22, lng: 88.36 },
-      { district: 'Pune', demandTrade: 'EV Technician & Solar', beneficiaries: 210, completionRate: 94, lat: 18.15, lng: 74.58 },
-      { district: 'Madurai', demandTrade: 'Electrician & Dairy', beneficiaries: 95, completionRate: 89, lat: 9.97, lng: 77.79 },
-      { district: 'Varanasi', demandTrade: 'Solar & Tailoring', beneficiaries: 176, completionRate: 87, lat: 25.32, lng: 82.85 },
-    ];
-
-    const tradeDropouts = [
-      { trade: 'Electrician', enrolled: 180, active: 168, dropoutPct: 6.6 },
-      { trade: 'Self-Employed Tailor', enrolled: 140, active: 134, dropoutPct: 4.2 },
-      { trade: 'Solar PV Installer', enrolled: 120, active: 110, dropoutPct: 8.3 },
-      { trade: 'Automotive / EV', enrolled: 95, active: 87, dropoutPct: 8.4 },
-      { trade: 'Dairy Assistant', enrolled: 75, active: 71, dropoutPct: 5.3 },
-    ];
-
+    // Calculate Inbound Channel Distribution dynamically
     const channelStats = {
-      web_voice: 420,
-      ivr_phone: 290,
-      whatsapp_note: 150,
+      web_voice: allSessions.filter((s) => s.channel === 'web_voice').length,
+      ivr_phone: allSessions.filter((s) => s.channel === 'ivr_phone').length,
+      whatsapp_note: allSessions.filter((s) => s.channel === 'whatsapp_note').length,
     };
 
+    // Calculate District Level Demand dynamically from database candidates
+    const districtsMap: Record<string, { beneficiaries: number; completed: number; tradesCount: Record<string, number> }> = {};
+
+    allCandidates.forEach((c) => {
+      const dist = c.district || 'Nadia';
+      if (!districtsMap[dist]) {
+        districtsMap[dist] = { beneficiaries: 0, completed: 0, tradesCount: {} };
+      }
+      districtsMap[dist].beneficiaries += 1;
+
+      const sess = allSessions.find((s) => s.candidateId === c.id);
+      if (sess && sess.status === 'completed') {
+        districtsMap[dist].completed += 1;
+      }
+
+      const prog = db.progress.get(c.id);
+      if (prog && prog.tradeId) {
+        const tr = db.trades.get(prog.tradeId);
+        const name = tr ? tr.tradeName : prog.tradeId;
+        districtsMap[dist].tradesCount[name] = (districtsMap[dist].tradesCount[name] || 0) + 1;
+      }
+    });
+
+    const districtDemand = Object.keys(districtsMap).map((dist) => {
+      const dData = districtsMap[dist];
+      let topTrade = 'Electrician & Solar';
+      let maxCount = 0;
+      Object.entries(dData.tradesCount).forEach(([trName, count]) => {
+        if (count > maxCount) {
+          maxCount = count;
+          topTrade = trName;
+        }
+      });
+      const cRate = dData.beneficiaries > 0 ? Math.round((dData.completed / dData.beneficiaries) * 100) : 100;
+      return {
+        district: dist,
+        demandTrade: topTrade,
+        beneficiaries: dData.beneficiaries,
+        completionRate: cRate,
+      };
+    });
+
+    // Calculate Dropout Rate & Retention by NSQF Trade dynamically
+    const tradesMap: Record<string, { enrolled: number; active: number }> = {};
+    allProgress.forEach((p) => {
+      const tr = db.trades.get(p.tradeId);
+      const name = tr ? tr.tradeName : p.tradeId;
+      if (!tradesMap[name]) {
+        tradesMap[name] = { enrolled: 0, active: 0 };
+      }
+      tradesMap[name].enrolled += 1;
+      if ((p.currentStage as any) !== 'abandoned') {
+        tradesMap[name].active += 1;
+      }
+    });
+
+    const tradeDropouts = Object.keys(tradesMap).map((trName) => {
+      const t = tradesMap[trName];
+      const dropouts = t.enrolled - t.active;
+      const dropoutPct = t.enrolled > 0 ? Number(((dropouts / t.enrolled) * 100).toFixed(1)) : 0;
+      return {
+        trade: trName,
+        enrolled: t.enrolled,
+        active: t.active,
+        dropoutPct,
+      };
+    });
+
     res.json({
-      totalBeneficiaries: allCandidates.length + 860,
-      totalInterviews: allSessions.length + 860,
+      totalBeneficiaries: allCandidates.length,
+      totalInterviews: allSessions.length,
       intakeCompletionRate: completionRate,
       activeTrainingCenters: db.centers.size,
       districtDemand,
@@ -696,6 +752,84 @@ async function startServer() {
       };
     });
     res.json({ candidates: list });
+  });
+
+  app.post('/api/admin/candidates', (req, res) => {
+    const { name, phone, district, state = 'West Bengal', gender = 'Male', age = 22, tradeId = 'trade_electrician', centerId = 'center_pmajay_nadia' } = req.body;
+    const candidateId = `cand_${Date.now()}`;
+    const candidate: Candidate = {
+      id: candidateId,
+      name: name || 'New Beneficiary',
+      phone: phone || '+91 90000 00000',
+      district: district || 'Nadia',
+      state,
+      gender,
+      age: Number(age),
+      createdAt: new Date().toISOString(),
+    };
+    db.candidates.set(candidateId, candidate);
+
+    const session: InterviewSession = {
+      id: `sess_${candidateId}`,
+      candidateId,
+      channel: 'web_voice',
+      language: 'hi',
+      consentGiven: true,
+      currentStepIndex: 5,
+      totalSteps: 5,
+      status: 'completed',
+      transcript: [{ speaker: 'assistant', text: 'Beneficiary registered directly via Admin Console.' }],
+      createdAt: candidate.createdAt,
+      updatedAt: candidate.createdAt,
+    };
+    db.sessions.set(session.id, session);
+
+    const profile: CandidateProfile = {
+      candidateId,
+      language: 'hi',
+      educationLevel: '10th Pass',
+      currentOccupation: 'Skill Trainee',
+      informalSkills: ['General practical skills'],
+      travelLimitKm: 15,
+      employmentPreference: 'hybrid',
+      extractedAt: candidate.createdAt,
+    };
+    db.profiles.set(candidateId, profile);
+
+    const progress: EnrollmentProgress = {
+      id: `prog_${candidateId}`,
+      candidateId,
+      tradeId,
+      centerId,
+      currentStage: 'enrollment_confirmed',
+      percentComplete: 20,
+      confirmedDate: 'Today',
+      trainingStartDate: 'Upcoming',
+      certificationStatus: 'in_progress',
+      employmentStatus: 'upcoming',
+      history: [
+        {
+          stage: 'enrollment_confirmed',
+          title: 'Direct Admin Registration',
+          date: 'Today',
+          completed: true,
+          note: 'Beneficiary added via District Admin Portal.',
+        },
+      ],
+    };
+    db.progress.set(candidateId, progress);
+
+    db.recordAuditLog('admin_1', 'Dr. Ramesh Sonkar', 'CREATE_CANDIDATE', 'Candidate', candidateId, `Created beneficiary candidate ${candidate.name}`);
+    res.json({ candidate, session, profile, progress });
+  });
+
+  app.delete('/api/admin/candidates/:id', (req, res) => {
+    const { id } = req.params;
+    db.candidates.delete(id);
+    db.profiles.delete(id);
+    db.progress.delete(id);
+    db.recordAuditLog('admin_1', 'Dr. Ramesh Sonkar', 'DELETE_CANDIDATE', 'Candidate', id, `Removed beneficiary record ${id}`);
+    res.json({ success: true });
   });
 
   app.get('/api/admin/candidate/:id', (req, res) => {

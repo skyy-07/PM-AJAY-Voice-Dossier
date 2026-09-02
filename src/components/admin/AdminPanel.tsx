@@ -59,6 +59,33 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
   const [overridePercent, setOverridePercent] = useState(60);
   const [overrideNote, setOverrideNote] = useState('');
 
+  // Candidate form state
+  const [showCandidateModal, setShowCandidateModal] = useState(false);
+  const [newCandidate, setNewCandidate] = useState({
+    name: '',
+    phone: '',
+    district: 'Nadia',
+    gender: 'Male',
+    age: 22,
+    tradeId: 'trade_electrician',
+    centerId: 'center_pmajay_nadia',
+  });
+
+  // Center form state
+  const [showCenterModal, setShowCenterModal] = useState(false);
+  const [newCenter, setNewCenter] = useState<Partial<TrainingCenter>>({
+    name: '',
+    district: 'Nadia',
+    state: 'West Bengal',
+    address: '',
+    seatsAvailable: 30,
+    totalSeats: 50,
+    nextBatchDate: '15 September',
+    hostelAvailable: true,
+    stipendSupport: true,
+    contactNumber: '+91 94340 00000',
+  });
+
   // Trade form state
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [newTrade, setNewTrade] = useState<Partial<NSQFTrade>>({
@@ -137,6 +164,89 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
 
   const handleExport = (format: 'csv' | 'json') => {
     window.open(`/api/admin/export?format=${format}`, '_blank');
+  };
+
+  const handleSaveCandidate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/admin/candidates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newCandidate),
+      });
+      if (res.ok) {
+        setShowCandidateModal(false);
+        setNewCandidate({
+          name: '',
+          phone: '',
+          district: 'Nadia',
+          gender: 'Male',
+          age: 22,
+          tradeId: 'trade_electrician',
+          centerId: 'center_pmajay_nadia',
+        });
+        loadAllAdminData();
+      }
+    } catch (e) {
+      alert('Error creating beneficiary candidate');
+    }
+  };
+
+  const handleDeleteCandidate = async (candidateId: string) => {
+    if (!confirm('Are you sure you want to remove this beneficiary record?')) return;
+    try {
+      await fetch(`/api/admin/candidates/${candidateId}`, { method: 'DELETE' });
+      if (selectedCandidate?.id === candidateId) setSelectedCandidate(null);
+      loadAllAdminData();
+    } catch (e) {
+      alert('Failed to delete candidate');
+    }
+  };
+
+  const handleSaveCenter = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/admin/centers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newCenter,
+          latitude: 23.18,
+          longitude: 88.58,
+          distanceKm: 5,
+          travelTimeMinutes: 15,
+          offeredTrades: ['trade_electrician', 'trade_tailor', 'trade_solar'],
+        }),
+      });
+      if (res.ok) {
+        setShowCenterModal(false);
+        setNewCenter({
+          name: '',
+          district: 'Nadia',
+          state: 'West Bengal',
+          address: '',
+          seatsAvailable: 30,
+          totalSeats: 50,
+          nextBatchDate: '15 September',
+          hostelAvailable: true,
+          stipendSupport: true,
+          contactNumber: '+91 94340 00000',
+        });
+        loadAllAdminData();
+      }
+    } catch (e) {
+      alert('Error saving center');
+    }
+  };
+
+  const handleDeleteCenter = async (centerId: string) => {
+    if (!confirm('Are you sure you want to delete this training center?')) return;
+    try {
+      await fetch(`/api/admin/centers/${centerId}`, { method: 'DELETE' });
+      loadAllAdminData();
+    } catch (e) {
+      alert('Failed to delete center');
+    }
   };
 
   const handleSaveTrade = async (e: React.FormEvent) => {
@@ -519,6 +629,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
                 />
               </div>
               <button
+                onClick={() => setShowCandidateModal(true)}
+                className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500 shadow-xs"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Candidate</span>
+              </button>
+              <button
                 onClick={loadAllAdminData}
                 className="flex items-center gap-1 rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-50"
               >
@@ -558,12 +675,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
                           {c.progress?.currentStage || 'in_training_60'} ({c.progress?.percentComplete || 60}%)
                         </span>
                       </td>
-                      <td className="p-3.5 text-right">
+                      <td className="p-3.5 text-right flex items-center justify-end gap-2">
                         <button
                           onClick={() => setSelectedCandidate(c)}
-                          className="rounded-lg bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
+                          className="rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100"
                         >
                           Inspect & Override
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCandidate(c.id)}
+                          className="rounded-lg bg-rose-50 p-1.5 text-rose-600 hover:bg-rose-100"
+                          title="Remove Beneficiary"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </td>
                     </tr>
@@ -621,7 +745,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
                   </div>
                 </div>
 
-                {/* Manual Override Stage Form (§9 Requirement) */}
+                {/* Manual Override Stage Form */}
                 <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
                   <div className="font-bold text-amber-900 uppercase flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4" />
@@ -724,13 +848,31 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
         {/* Center Catalog */}
         {activeTab === 'centers' && (
           <div className="space-y-4">
-            <h3 className="text-sm font-bold text-stone-900">
-              PM-AJAY Training Centers
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-sm font-bold text-stone-900">
+                PM-AJAY Training Centers
+              </h3>
+              <button
+                onClick={() => setShowCenterModal(true)}
+                className="flex items-center gap-1 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-500"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Center</span>
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {centersList.map((center) => (
                 <div key={center.id} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-2xs space-y-2 text-xs">
-                  <h4 className="font-extrabold text-sm text-stone-900">{center.name}</h4>
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-extrabold text-sm text-stone-900">{center.name}</h4>
+                    <button
+                      onClick={() => handleDeleteCenter(center.id)}
+                      className="text-stone-400 hover:text-rose-600 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                   <div className="text-stone-500">{center.address}</div>
                   <div className="flex gap-2 text-stone-700 font-semibold">
                     <span>Seats: {center.seatsAvailable}/{center.totalSeats}</span>
@@ -776,6 +918,197 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onExitAdmin }) => {
           </div>
         )}
       </main>
+
+      {/* Modal to Add Beneficiary Candidate */}
+      {showCandidateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-stone-900 mb-4">Register New Beneficiary Candidate</h3>
+            <form onSubmit={handleSaveCandidate} className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-stone-700">Full Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={newCandidate.name}
+                  onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+                  placeholder="e.g. Ramesh Mondal"
+                  className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-semibold text-stone-700">Phone Number:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCandidate.phone}
+                    onChange={(e) => setNewCandidate({ ...newCandidate, phone: e.target.value })}
+                    placeholder="+91 98765 00000"
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-stone-700">District:</label>
+                  <select
+                    value={newCandidate.district}
+                    onChange={(e) => setNewCandidate({ ...newCandidate, district: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  >
+                    <option value="Nadia">Nadia</option>
+                    <option value="Purba Bardhaman">Purba Bardhaman</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Madurai">Madurai</option>
+                    <option value="Varanasi">Varanasi</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-semibold text-stone-700">Trade Assigned:</label>
+                  <select
+                    value={newCandidate.tradeId}
+                    onChange={(e) => setNewCandidate({ ...newCandidate, tradeId: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  >
+                    {tradesList.map((t) => (
+                      <option key={t.id} value={t.id}>{t.tradeName}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-stone-700">Training Center:</label>
+                  <select
+                    value={newCandidate.centerId}
+                    onChange={(e) => setNewCandidate({ ...newCandidate, centerId: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  >
+                    {centersList.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCandidateModal(false)}
+                  className="rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500"
+                >
+                  Create Record
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal to Add Training Center */}
+      {showCenterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <h3 className="text-base font-bold text-stone-900 mb-4">Add Skill Training Center</h3>
+            <form onSubmit={handleSaveCenter} className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-stone-700">Center Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={newCenter.name}
+                  onChange={(e) => setNewCenter({ ...newCenter, name: e.target.value })}
+                  placeholder="e.g. PM-AJAY Skill Institute (Ranaghat)"
+                  className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-semibold text-stone-700">District:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCenter.district}
+                    onChange={(e) => setNewCenter({ ...newCenter, district: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-stone-700">State:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCenter.state}
+                    onChange={(e) => setNewCenter({ ...newCenter, state: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-stone-700">Full Address:</label>
+                <input
+                  type="text"
+                  required
+                  value={newCenter.address}
+                  onChange={(e) => setNewCenter({ ...newCenter, address: e.target.value })}
+                  placeholder="e.g. Near Block Development Office, Nadia"
+                  className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="font-semibold text-stone-700">Total Seats:</label>
+                  <input
+                    type="number"
+                    value={newCenter.totalSeats}
+                    onChange={(e) => setNewCenter({ ...newCenter, totalSeats: Number(e.target.value) })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-stone-700">Seats Available:</label>
+                  <input
+                    type="number"
+                    value={newCenter.seatsAvailable}
+                    onChange={(e) => setNewCenter({ ...newCenter, seatsAvailable: Number(e.target.value) })}
+                    className="mt-1 w-full rounded-xl border border-stone-300 p-2.5"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCenterModal(false)}
+                  className="rounded-xl border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500"
+                >
+                  Save Center
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal to Add Trade */}
       {showTradeModal && (
