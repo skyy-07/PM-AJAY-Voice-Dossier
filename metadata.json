@@ -1,0 +1,7 @@
+{
+  "name": "PM-AJAY Voice Livelihood Assistant",
+  "description": "Voice-first livelihood and NSQF skill pathway assistant for PM-AJAY beneficiaries with multilingual spoken interviews, adaptive profiling, and center matching.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

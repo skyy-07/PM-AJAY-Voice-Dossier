@@ -1,0 +1,967 @@
+import {
+  AdminUser,
+  AuditLog,
+  Candidate,
+  CandidateProfile,
+  EnrollmentProgress,
+  InterviewSession,
+  NSQFTrade,
+  RealJobRole,
+  Recommendation,
+  TrainingCenter,
+} from '../src/types';
+import { REAL_JOBS_CATALOGUE } from './realJobsDataset';
+
+// In-Memory Database store with rich seed data for PM-AJAY Scheme
+class Database {
+  public candidates: Map<string, Candidate> = new Map();
+  public sessions: Map<string, InterviewSession> = new Map();
+  public profiles: Map<string, CandidateProfile> = new Map();
+  public trades: Map<string, NSQFTrade> = new Map();
+  public realJobs: Map<string, RealJobRole> = new Map();
+  public centers: Map<string, TrainingCenter> = new Map();
+  public recommendations: Map<string, Recommendation[]> = new Map();
+  public progress: Map<string, EnrollmentProgress> = new Map();
+  public adminUsers: Map<string, AdminUser> = new Map();
+  public auditLogs: AuditLog[] = [];
+
+  constructor() {
+    this.seedData();
+  }
+
+  private seedData() {
+    // Seed Real Jobs Catalogue
+    REAL_JOBS_CATALOGUE.forEach((job) => {
+      this.realJobs.set(job.id, job);
+    });
+
+    // Seed Admin
+    const admin: AdminUser = {
+      id: 'admin_1',
+      username: 'admin',
+      name: 'Dr. Ramesh Sonkar (District Welfare Officer)',
+      role: 'district_officer',
+      district: 'Nadia',
+    };
+    this.adminUsers.set(admin.username, admin);
+
+    // Seed NSQF Trades
+    const tradeElectrician: NSQFTrade = {
+      id: 'trade_electrician',
+      tradeName: 'Electrician',
+      nsqfLevel: 4,
+      nsqfQpCode: 'ELE/Q1401',
+      sector: 'Electronics & Power',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'Residential, commercial & agricultural wiring, MCB panel installation, motor starter repair, and earthing pits.',
+      durationMonths: 3,
+      minEducation: '8th Standard',
+      expectedMonthlyEarning: '₹15,000 - ₹24,000',
+      activeVacanciesCount: 18,
+      hiringEmployers: ['WBSEDCL Discom Contractors', 'Havells / Anchor Service Franchises', 'Local Real Estate Builders'],
+      keyDuties: [
+        'Laying concealed PVC conduits and pulling copper wire cables',
+        'Installing MCB distribution boards and troubleshooting short circuits',
+        'Connecting agricultural irrigation pump motor starters',
+        'Constructing chemical earthing pits and measuring insulation resistance',
+      ],
+      localizedNames: {
+        hi: 'इलेक्ट्रीशियन (घरेलू व कृषि वायरिंग तकनीशियन)',
+        bn: 'ইলেকট্রিশিয়ান (গৃহস্থালি ও কৃষি ওয়্যারিং কারিগর)',
+        mr: 'इलेक्ट्रिशियन (विद्युत व शेती वायरिंग तंत्रज्ञ)',
+        ta: 'எலக்ட்ரீஷியன் (மின் பணியாளர் & வயரிங்)',
+        en: 'Electrician (Domestic & Agricultural Wiring Technician)',
+      },
+      localizedDescriptions: {
+        hi: 'घरों, दुकानों और खेतों में 1-फेज व 3-फेज वायरिंग, एमसीबी बॉक्स, मोटर स्टार्टर व अर्थिंग लगाने का 3 महीने का व्यावहारिक प्रशिक्षण।',
+        bn: 'বাড়ি, দোকান ও জমিতে ১-ফেজ ও ৩-ফেজ ওয়্যারিং, এমসিবি প্যানেল ও পাম্প মোটর মেরামতের ৩ মাসের হাতে-কলমে কোর্স।',
+        mr: 'घरगुती व शेती वायरिंग, मोटर दुरुस्ती आणि अर्थिंग जोडणीचे ३ महिन्यांचे प्रात्यक्षिक प्रशिक्षण.',
+        ta: 'வீட்டு மற்றும் விவசாய மோட்டார் பழுதுபார்ப்பு, சுவிட்ச்போர்டு அமைக்கும் 3 மாத நேரடி பயிற்சி.',
+        en: '3-month high-demand practical course covering domestic/agricultural wiring, pump motors, and circuit breaker distribution.',
+      },
+    };
+
+    const tradeTailor: NSQFTrade = {
+      id: 'trade_tailor',
+      tradeName: 'Self-Employed Tailor / Boutique Master',
+      nsqfLevel: 4,
+      nsqfQpCode: 'AMH/Q1947',
+      sector: 'Apparel & Garment',
+      category: 'self_employment',
+      demandLevel: 'High',
+      description: 'Garment pattern drafting, motorized lockstitch sewing, blouse/kurti tailoring, boutique management, and home enterprise.',
+      durationMonths: 2,
+      minEducation: 'No formal requirement',
+      expectedMonthlyEarning: '₹12,000 - ₹24,000',
+      activeVacanciesCount: 22,
+      hiringEmployers: ['Self-Employed Boutique Owner', 'Santipur / Kalna Garment Export Units', 'School Uniform Contractors'],
+      keyDuties: [
+        'Body measurement taking and precise paper pattern drafting',
+        'Operating motorized single needle lockstitch and 4-thread overlock machines',
+        'Stitching blouses, kurtis, salwar suits, shirts, and trousers',
+        'Fitting alterations, buttonholing, and customer order management',
+      ],
+      localizedNames: {
+        hi: 'स्व-रोज़गार दर्जी / बुटीक मास्टर',
+        bn: 'স্ব-উদ্যোগী দর্জি / বুটিক মাস্টার কারিগর',
+        mr: 'स्वयंरोजगार टेलर / बुटीक मास्टर',
+        ta: 'சுயதொழில் தையல் கலைஞர் / ஆடை வடிவமைப்பாளர்',
+        en: 'Self-Employed Tailor / Boutique Master',
+      },
+      localizedDescriptions: {
+        hi: 'ब्लाउज, सूट, कुर्ती और पुरुषों के कपड़े सिलने, कटिंग करने और घर बैठे सिलाई दुकान शुरू करने का 2 महीने का प्रशिक्षण।',
+        bn: 'ব্লাউজ, কুর্তি, শার্ট ও প্যান্ট কাটিং এবং সেলাই শিখে নিজস্ব বুটিক বা দোকান গড়ে তোলার ২ মাসের প্রশিক্ষণ।',
+        mr: 'ब्लाऊज, ड्रेस आणि शर्ट शिवून स्वतःचा शिलाई व्यवसाय सुरू करण्यासाठी २ महिन्यांचे प्रशिक्षण.',
+        ta: 'ஆடைகள் தைத்தல், வெட்டுதல் மற்றும் சொந்தமாக தையல் தொழில் தொடங்கும் 2 மாத பயிற்சி.',
+        en: '2-month hands-on garment stitching, pattern cutting, and home micro-enterprise setup with toolkit grant.',
+      },
+    };
+
+    const tradeSolar: NSQFTrade = {
+      id: 'trade_solar',
+      tradeName: 'Solar PV Rooftop & Pump Technician',
+      nsqfLevel: 4,
+      nsqfQpCode: 'SGJ/Q0101',
+      sector: 'Renewable Clean Energy',
+      category: 'wage_employment',
+      demandLevel: 'High',
+      description: 'Solar PV rooftop installation, DC string wiring, on-grid inverters, bi-directional net meters, and PM Surya Ghar scheme.',
+      durationMonths: 3,
+      minEducation: '8th / 10th Pass',
+      expectedMonthlyEarning: '₹16,000 - ₹26,000',
+      activeVacanciesCount: 14,
+      hiringEmployers: ['Tata Power Solar / Adani Solar EPC Partners', 'State Green Energy Corp Contractors', 'PM Surya Ghar Vendors'],
+      keyDuties: [
+        'Mounting galvanized rooftop panel mounting structures securely',
+        'Crimping MC4 waterproof connectors and wiring DC solar strings',
+        'Connecting on-grid solar string inverters and AC distribution boxes',
+        'Testing open-circuit voltage (Voc) and grid synchronization',
+      ],
+      localizedNames: {
+        hi: 'सोलर रूफटॉप व ग्रिड तकनीशियन',
+        bn: 'সৌর রুফটপ ও গ্রিড প্রযুক্তিবিদ (সোলার টেকনিশিয়ান)',
+        mr: 'सोलर रूफटॉप व ग्रीड तंत्रज्ञ',
+        ta: 'சூரிய சக்தி கூரை அமைப்பு மற்றும் பராமரிப்பு',
+        en: 'Solar PV Rooftop & Grid Technician',
+      },
+      localizedDescriptions: {
+        hi: 'पीएम सूर्य घर मुफ्त बिजली योजना के तहत छतों पर सोलर पैनल लगाने और इनवर्टर चालू करने का सरकारी प्रमाणित कोर्स।',
+        bn: 'পিএম সূর্য ঘর প্রকল্পের অধীনে বাড়ির ছাদে সোলার প্যানেল ও ইনভার্টার সংযোগের সরাসরি কর্মসংস্থান ভিত্তিক কোর্স।',
+        mr: 'पंतप्रधान सूर्य घर योजनेअंतर्गत छतावर सोलर पॅनेल बसवणे आणि इनव्हर्टर जोडणीचे प्रशिक्षण.',
+        ta: 'சூரிய சக்தி கூரை தகடுகள் அமைத்தல் மற்றும் இன்வெர்ட்டர் இணைக்கும் தொழில்முறை பயிற்சி.',
+        en: 'Govt-recognized green energy skill training for rooftop solar setup and PM Surya Ghar scheme projects.',
+      },
+    };
+
+    const tradeAutomotive: NSQFTrade = {
+      id: 'trade_auto',
+      tradeName: 'Two-Wheeler, EV & E-Rickshaw Mechanic',
+      nsqfLevel: 4,
+      nsqfQpCode: 'ASC/Q1411',
+      sector: 'Automotive & EV',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'Motorcycle IC engines, disc brakes, EV BLDC hub motors, lithium battery diagnostics, and e-rickshaw differential servicing.',
+      durationMonths: 3,
+      minEducation: '8th Pass',
+      expectedMonthlyEarning: '₹15,000 - ₹25,000',
+      activeVacanciesCount: 16,
+      hiringEmployers: ['Hero MotoCorp / Bajaj Dealerships', 'E-Rickshaw & EV Scooter Hubs', 'Local Highway Service Garages'],
+      keyDuties: [
+        'Two-wheeler engine oil change, spark plug tuning, and brake overhauling',
+        'Testing electric scooter BLDC hub motors and speed controllers',
+        'Diagnosing lithium-ion / lead-acid battery voltage drops and wiring faults',
+        'Operating tyre changers, puncture vulcanizers, and wheel balancing',
+      ],
+      localizedNames: {
+        hi: 'दोपहिया, इलेक्ट्रिक वाहन (ईवी) व ई-रिक्शा मैकेनिक',
+        bn: 'টু-হুইলার, ইলেকট্রিক গাড়ি (ইভি) ও টোটো/ই-রিকশা মেকানিক',
+        mr: 'दुचाकी, इलेक्ट्रिक वाहने (EV) व ई-रिक्षा मेकॅनिक',
+        ta: 'இருசக்கர வாகனம் & மின்சார வாகன (EV) மெக்கானிக்',
+        en: 'Two-Wheeler, Electric Vehicle (EV) & E-Rickshaw Mechanic',
+      },
+      localizedDescriptions: {
+        hi: 'मोटरसाइकिल और ई-रिक्शा की सर्विसिंग, इंजन व डिस्क ब्रेक रिपेयरिंग, बीएलडीसी मोटर और बैटरी कंट्रोलर सुधारने का कोर्स।',
+        bn: 'মোটরসাইকেল ও টোটো/ই-রিকশার ইঞ্জিন, ব্রেক, ইলেকট্রিক বিএলডিসি মোটর ও ব্যাটারি কন্ট্রোলার মেরামতের প্রশিক্ষণ।',
+        mr: 'बाईक आणि ई-रिक्षा दुरुस्ती, इंजिन व बॅटरी रिपेअरिंगचे प्रात्यक्षिक प्रशिक्षण.',
+        ta: 'இருசக்கர வாகனங்கள் மற்றும் இ-ரிக்ஷா பேட்டரி, மோட்டார் பழுதுநீக்கும் பயிற்சி.',
+        en: 'Practical motorbike, scooter, and EV battery/motor servicing to launch a local workshop or work with dealerships.',
+      },
+    };
+
+    const tradeDairy: NSQFTrade = {
+      id: 'trade_dairy',
+      tradeName: 'Dairy Farm & Milk Collection Assistant',
+      nsqfLevel: 3,
+      nsqfQpCode: 'AGR/Q4101',
+      sector: 'Agriculture & Animal Husbandry',
+      category: 'self_employment',
+      demandLevel: 'Medium',
+      description: 'Scientific cattle nutrition, electronic milk fat/SNF testing, automated vacuum milking, disease prevention, and dairy cooperatives.',
+      durationMonths: 1.5,
+      minEducation: 'No formal requirement',
+      expectedMonthlyEarning: '₹14,000 - ₹25,000',
+      activeVacanciesCount: 12,
+      hiringEmployers: ['District Milk Producers Cooperative Union (Nadia/Burdwan)', 'Amul / Mother Dairy Collection Centers', 'Commercial Dairy Farms'],
+      keyDuties: [
+        'Formulating balanced green fodder and mineral rations for milch cattle',
+        'Operating hygienic automated vacuum milking machines',
+        'Testing milk fat and SNF on computerized milk analyzers',
+        'Administering preventive vaccinations and animal first aid',
+      ],
+      localizedNames: {
+        hi: 'डेयरी फार्म, दुग्ध संकलन व पशुपालन सहायक',
+        bn: 'দুগ্ধ খামার, দুধ সংগ্রহ ও গবাদি পশু স্বাস্থ্য সহায়ক',
+        mr: 'दुग्ध व्यवसाय, दूध संकलन व पशुसंवর্धन सहाय्यक',
+        ta: 'பால் பண்ணை மற்றும் கால்நடை பராமரிப்பு உதவியாளர்',
+        en: 'Dairy Farm, Milk Collection & Livestock Health Assistant',
+      },
+      localizedDescriptions: {
+        hi: 'गायों-भैंसों का वैज्ञानिक पालन, दूध की फैट व एसएनएफ जांच, दूध उत्पादन बढ़ाने और डेयरी समिति से जुड़कर पक्की कमाई का प्रशिक्षण।',
+        bn: 'উন্নত পদ্ধতিতে গরু পালন, ডিজিটাল যন্ত্রে দুধের ফ্যাট পরীক্ষা এবং দুগ্ধ সমবায়ের সাথে যুক্ত হয়ে নিয়মিত উপার্জনের কোর্স।',
+        mr: 'गायी-म्हशींचे योग्य संगोपन, दुधातील फॅट तपासणी आणि दुग्ध व्यवसायाचे प्रशिक्षण.',
+        ta: 'கால்நடை வளர்ப்பு, பால் கொழுப்பு சோதனை மற்றும் பால் பண்ணை தொழில் பயிற்சி.',
+        en: 'Livestock management, increasing milk yield, and cooperative market linkage under dairy schemes.',
+      },
+    };
+
+    const tradePlumbing: NSQFTrade = {
+      id: 'trade_plumbing',
+      tradeName: 'Plumber & Building Pipeline Technician',
+      nsqfLevel: 4,
+      nsqfQpCode: 'PSC/Q0104',
+      sector: 'Plumbing & Sanitation',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'CPVC/UPVC water piping, overhead water tanks, motor connections, sanitary fixtures, and drainage under Jal Jeevan Mission.',
+      durationMonths: 2,
+      minEducation: '8th Pass',
+      expectedMonthlyEarning: '₹14,000 - ₹24,000',
+      activeVacanciesCount: 15,
+      hiringEmployers: ['Jal Jeevan Mission Har Ghar Jal Contractors', 'Real Estate Builders', 'Jaquar / Astral Service Centers'],
+      keyDuties: [
+        'Laying CPVC/UPVC water pipelines and solvent welding joints',
+        'Installing overhead water tanks and automatic level controllers',
+        'Fitting faucets, showers, wash basins, and commodes',
+        'Performing hydraulic pressure tests to detect leaks',
+      ],
+      localizedNames: {
+        hi: 'प्लंबर व बिल्डिंग पाइपलाइन तकनीशियन',
+        bn: 'প্লাম্বার ও স্যানিটেশন টেকনিশিয়ান',
+        mr: 'प्लंबर व पाईपलाईन तंत्रज्ञ',
+        ta: 'பிளம்பர் மற்றும் குழாய் பொருத்துநர்',
+        en: 'Plumber & Building Pipeline Technician',
+      },
+      localizedDescriptions: {
+        hi: 'घरों और जल जीवन मिशन में पानी की पाइपलाइन, टंकी, मोटर, नल, कमोड और बेसिन फिट करने का 2 महीने का कोर्स।',
+        bn: 'বাড়ি এবং জল জীবন মিশন প্রকল্পে জলের পাইপলাইন, ট্যাঙ্ক, পাম্প ও স্যানিটারি ফিটিংস করার কোর্স।',
+        mr: 'घरांमध्ये पाण्याची पाईपलाईन, पाण्याची टाकी व नळ बसवण्याचे २ महिन्यांचे प्रशिक्षण.',
+        ta: 'குடிநீர் குழாய்கள், தொட்டிகள் மற்றும் சானிட்டரி இணைப்புகள் அமைக்கும் பயிற்சி.',
+        en: '2-month practical plumbing course laying water pipelines, water tanks, sanitary ware, and drainage.',
+      },
+    };
+
+    const tradeMasonry: NSQFTrade = {
+      id: 'trade_masonry',
+      tradeName: 'General Mason & Tile Layer (Raj Mistri)',
+      nsqfLevel: 3,
+      nsqfQpCode: 'CON/Q0103',
+      sector: 'Construction & Infrastructure',
+      category: 'wage_employment',
+      demandLevel: 'High',
+      description: 'Brickwork/block wall construction in true plumb, sand-cement plastering, vitrified tile flooring, and RCC concrete casting.',
+      durationMonths: 2.5,
+      minEducation: 'No formal schooling barrier',
+      expectedMonthlyEarning: '₹16,000 - ₹26,000',
+      activeVacanciesCount: 20,
+      hiringEmployers: ['PMAY-G Rural Housing Contractors', 'L&T / Shapoorji Subcontractors', 'Local Building Promoters'],
+      keyDuties: [
+        'Laying brickwork in plumb and level alignment with 10mm mortar joints',
+        'Applying two-coat cement plaster smoothly on walls and ceilings',
+        'Cutting and laying vitrified ceramic tiles with precision',
+        'Executing concrete pouring for structural columns and slabs',
+      ],
+      localizedNames: {
+        hi: 'राजमिस्त्री, टाइल्स लेयर व कंक्रीट कारीगर',
+        bn: 'রাজমিস্ত্রি ও আধুনিক নির্মাণ কারিগর',
+        mr: 'गवंडी व टाईल्स लेअर (राजमिस्त्री)',
+        ta: 'கொத்தனார் மற்றும் டைல்ஸ் பதிப்பாளர்',
+        en: 'General Mason & Tile Layer (Raj Mistri)',
+      },
+      localizedDescriptions: {
+        hi: 'मकान निर्माण में ईंट-जोड़ाई, दीवार पर प्लास्टर, फर्श पर टाइल्स लगाने और छत ढलाई का पक्का राजमिस्त्री काम।',
+        bn: 'বাড়ি নির্মাণে নিখুঁত গাঁথনি, প্লাস্টার, মেঝেতে টাইলস ফিটিং এবং ছাদ ঢালাইয়ের দক্ষ রাজমিস্ত্রির কোর্স।',
+        mr: 'घराचे बांधकाम, वीटकाम, प्लास्टर आणि टाईल्स बसवण्याचे काम.',
+        ta: 'சுவர் கட்டுதல், பூச்சு வேலை மற்றும் டைல்ஸ் பதிக்கும் வேலை.',
+        en: 'Construction skill training covering brickwork, plastering, tile flooring, and concrete works.',
+      },
+    };
+
+    const tradeWarehouse: NSQFTrade = {
+      id: 'trade_warehouse',
+      tradeName: 'Warehouse Inventory & Picker-Packer Associate',
+      nsqfLevel: 3,
+      nsqfQpCode: 'LSC/Q2301',
+      sector: 'Logistics & Supply Chain',
+      category: 'wage_employment',
+      demandLevel: 'High',
+      description: 'Handheld barcode scanning (HHT), order picking, protective carton packaging, pallet trucks, and dispatch manifesting.',
+      durationMonths: 2,
+      minEducation: '8th / 10th Pass',
+      expectedMonthlyEarning: '₹14,000 - ₹21,000',
+      activeVacanciesCount: 25,
+      hiringEmployers: ['Flipkart / Amazon Fulfillment Hubs', 'Delhivery / Shadowfax Depots', 'Reliance Retail Distribution Hubs'],
+      keyDuties: [
+        'Scanning barcodes and binning items into racks',
+        'Picking order items accurately into trolleys',
+        'Packing cartons safely with bubble wrap and shipping labels',
+        'Operating manual pallet jacks to stage shipments',
+      ],
+      localizedNames: {
+        hi: 'गोदाम इन्वेंट्री व पिकर-पैकर सहायक (लॉजिस्टिक्स)',
+        bn: 'ওয়্যারহাউস ইনভেন্টরি ও প্যাকিং সহযোগী (লজিস্টিকস)',
+        mr: 'वेअरहाऊस इन्व्हेंटरी व पिकर-पॅकर सहाय्यक',
+        ta: 'கிடங்கு இருப்பு மற்றும் பார்சல் பேக்கிங் உதவியாளர்',
+        en: 'Warehouse Inventory & Picker-Packer Associate',
+      },
+      localizedDescriptions: {
+        hi: 'ई-कॉमर्स वेयरहाउस में बारकोड स्कैनर से सामान छांटने, पैक करने और बिल लगाकर भेजने का काम। पीएफ व ईएसआई उपलब्ध।',
+        bn: 'ই-কমার্স ওয়্যারহাউসে বারকোড স্ক্যানার দিয়ে পণ্য বাছাই, প্যাকিং ও ডিসপ্যাচ করার চাকরি।',
+        mr: 'वेअरहाऊसमध्ये मालाची तपासणी, पॅकिंग आणि डिस्पॅच करण्याचे काम.',
+        ta: 'கிடங்கில் பொருட்களை வரிசைப்படுத்தி பேக்கிங் செய்து அனுப்பும் வேலை.',
+        en: 'Logistics fulfillment center training with barcode scanners, picking systems, and packing standards.',
+      },
+    };
+
+    const tradeGDA: NSQFTrade = {
+      id: 'trade_gda',
+      tradeName: 'General Duty Hospital Assistant (Nursing Aide)',
+      nsqfLevel: 4,
+      nsqfQpCode: 'HSS/Q5101',
+      sector: 'Healthcare & Hospital Services',
+      category: 'wage_employment',
+      demandLevel: 'High',
+      description: 'Patient vital signs monitoring (BP/sugar/pulse), hygiene care, wheelchair transfer, medical sample transport, and hospital ward duties.',
+      durationMonths: 3,
+      minEducation: '8th / 10th Pass',
+      expectedMonthlyEarning: '₹14,000 - ₹22,000',
+      activeVacanciesCount: 17,
+      hiringEmployers: ['Ranaghat Sub-Divisional Hospital', 'Private Nursing Homes & Clinics', 'Elderly Care Agencies'],
+      keyDuties: [
+        'Recording patient BP, pulse, and oxygen saturation',
+        'Assisting bedridden patients with daily hygiene and comfort',
+        'Transferring patients on wheelchairs and stretchers safely',
+        'Segregating bio-medical hospital waste properly',
+      ],
+      localizedNames: {
+        hi: 'अस्पताल सहायक (जीडीए) व नर्सिंग सहयोगी',
+        bn: 'হাসপাতাল সহায়ক (জিডিএ) ও নার্সিং সহযোগী',
+        mr: 'रुग्णालय सहाय्यक (GDA) व रुग्ण सेवा',
+        ta: 'மருத்துவமனை பொது உதவி மற்றும் நோயாளி பராமரிப்பாளர்',
+        en: 'General Duty Hospital Assistant (Nursing Aide)',
+      },
+      localizedDescriptions: {
+        hi: 'सरकारी व निजी अस्पतालों में डॉक्टर व नर्स की मदद, मरीज का बीपी-शुगर नापना और मरीजों की देखभाल का कोर्स।',
+        bn: 'হাসপাতাল ও নার্সিংহোমে ডাক্তার-নার্সদের সহায়তা, রোগীর প্রেসার-সুগার পরীক্ষা ও রোগী পরিচর্যার কোর্স।',
+        mr: 'रुग्णालयामध्ये डॉक्टर व नर्सेसना मदत करणे, बीपी तपासणे आणि रुग्णांची काळजी घेणे.',
+        ta: 'மருத்துவமனையில் நோயாளிகளுக்கு முதலுதவி, மருந்து மற்றும் பராமரிப்பு வழங்கும் பயிற்சி.',
+        en: 'Healthcare training on patient vital monitoring, clinical hygiene, and hospital ward operations.',
+      },
+    };
+
+    const tradeDrone: NSQFTrade = {
+      id: 'trade_drone',
+      tradeName: 'Kisan Agricultural Drone Pilot & Crop Sprayer',
+      nsqfLevel: 4,
+      nsqfQpCode: 'AGR/Q1204',
+      sector: 'Agriculture Tech & Drones',
+      category: 'hybrid',
+      demandLevel: 'Emerging',
+      description: 'DGCA-certified drone flight paths, nano-urea crop spraying, battery management, and FPO custom hiring operations.',
+      durationMonths: 2,
+      minEducation: '10th Pass',
+      expectedMonthlyEarning: '₹18,000 - ₹30,000',
+      activeVacanciesCount: 10,
+      hiringEmployers: ['Kisan Drone Hubs & FPOs', 'IFFCO Agri-Tech Units', 'Custom Hiring Centers (CHC)'],
+      keyDuties: [
+        'Mapping field boundaries and flying automated spray missions',
+        'Mixing nano-fertilizers into the drone payload tank',
+        'Managing high-capacity LiPo batteries and propulsion checks',
+        'Spraying crops in 7-10 minutes per acre with high precision',
+      ],
+      localizedNames: {
+        hi: 'किसान कृषि ड्रोन पायलट व कीटनाशक ऑपरेटर',
+        bn: 'কৃষি ড্রোন পাইলট ও সার স্প্রে টেকনিশিয়ান',
+        mr: 'शेतकरी कृषी ड्रोन पायलट व फवारणी ऑपरेटर',
+        ta: 'விவசாய ட்ரோன் பைலட் மற்றும் தெளிப்பான் ஆபரேட்டர்',
+        en: 'Kisan Agricultural Drone Pilot & Crop Sprayer',
+      },
+      localizedDescriptions: {
+        hi: 'खेतों में ड्रोन उड़ाकर नैनो यूरिया और कीटनाशक छिड़कने, ड्रोन उड़ाने और आधुनिक खेती में कमाई का कोर्स।',
+        bn: 'কৃষি জমিতে ড্রোন উড়িয়ে ন্যানো ইউরিয়া ও সার স্প্রে করা এবং আধুনিক কৃষিতে ড্রোন পাইলট হওয়ার প্রশিক্ষণ।',
+        mr: 'शेतात ड्रोनद्वारे औषध फवारणी करणे आणि ड्रोन पायलटचे प्रशिक्षण.',
+        ta: 'விவசாய நிலங்களில் ட்ரோன் மூலம் உரம் மற்றும் மருந்து தெளிக்கும் பயிற்சி.',
+        en: 'Modern agri-tech drone piloting course covering GPS mapping, crop spraying, and drone maintenance.',
+      },
+    };
+
+    const tradeWelder: NSQFTrade = {
+      id: 'trade_welder',
+      tradeName: 'Arc Welder (SMAW / GMAW) & Metal Fabricator',
+      nsqfLevel: 4,
+      nsqfQpCode: 'CSC/Q0204',
+      sector: 'Capital Goods & Welding',
+      category: 'wage_employment',
+      demandLevel: 'High',
+      description: 'Inverter arc welding, oxy-acetylene gas cutting, metal safety gates, window grills, structural steel sheds, and trailer fabrication.',
+      durationMonths: 3,
+      minEducation: '8th Pass',
+      expectedMonthlyEarning: '₹15,000 - ₹25,000',
+      activeVacanciesCount: 14,
+      hiringEmployers: ['Kalyani & Ranaghat Industrial Fabrication Units', 'Grill & Shutter Workshops', 'Structural Steel Contractors'],
+      keyDuties: [
+        'Striking arc and welding metal joints with correct penetration',
+        'Operating angle grinders for beveling and slag removal',
+        'Fabricating safety gates, window grills, and steel sheds',
+        'Observing high safety standards with auto-darkening helmets',
+      ],
+      localizedNames: {
+        hi: 'आर्क वेल्डर (एसएमएडब्ल्यू) व धातु फैब्रिकेटर',
+        bn: 'আর্ক ওয়েল্ডার ও মেটাল ফেব্রিকেশন কারিগর',
+        mr: 'आर्क वेल्डर व मेटल फॅब्रिकेटर',
+        ta: 'ஆர்க் வெல்டர் மற்றும் உலோக தயாரிப்பாளர்',
+        en: 'Arc Welder (SMAW / GMAW) & Metal Fabricator',
+      },
+      localizedDescriptions: {
+        hi: 'लोहे के गेट, ग्रिल, छत के ट्रस, ट्रैक्टर ट्रॉली और भारी ढांचों की वेल्डिंग और कटिंग का काम।',
+        bn: 'লোহার গেট, গ্রিল, জানালার ফ্রেম ও স্ট্রাকচারাল মেটাল ওয়েল্ডিং ও কাটিং এর প্রশিক্ষণ।',
+        mr: 'लोखंडी गेट, ग्रिल, ट्रस आणि ट्रॅक्टर ट्रॉली वेल्डिंग करण्याचे प्रशिक्षण.',
+        ta: 'இரும்பு கேட், கிரில் மற்றும் உலோக வெல்டிங் பயிற்சி.',
+        en: 'Professional arc welding and gas cutting course for fabrication yards and engineering workshops.',
+      },
+    };
+
+    const tradeCSC: NSQFTrade = {
+      id: 'trade_csc',
+      tradeName: 'CSC Digital Village Operator & e-Services Executive',
+      nsqfLevel: 4,
+      nsqfQpCode: 'SSC/Q2212',
+      sector: 'IT-ITES & Digital Services',
+      category: 'self_employment',
+      demandLevel: 'High',
+      description: 'Govt welfare e-services, Aadhaar micro-ATM cash withdrawals, typing, scanning, printing, utility billing, and citizen kiosks.',
+      durationMonths: 2,
+      minEducation: '10th Pass',
+      expectedMonthlyEarning: '₹14,000 - ₹26,000',
+      activeVacanciesCount: 15,
+      hiringEmployers: ['Self-Employed CSC Kendra in Gram Panchayat', 'Bank Mitra CSP Points', 'Cyber Cafe & Online Kiosks'],
+      keyDuties: [
+        'Submitting online government welfare scheme applications',
+        'Processing Aadhaar biometric micro-ATM cash withdrawals',
+        'Operating color printers, document scanners, and photocopying',
+        'Assisting villagers with utility bill payments and ticketing',
+      ],
+      localizedNames: {
+        hi: 'सीएससी डिजिटल सेवा केंद्र संचालक व ई-मित्र ऑपरेटर',
+        bn: 'সিএসসি ডিজিটাল সেবা কেন্দ্র সঞ্চালক ও অনলাইন সার্ভিস সহকারী',
+        mr: 'सीएससी डिजिटल सेवा केंद्र चालक व ई-सेवा ऑपरेटर',
+        ta: 'பொது சேவை மையம் (CSC) டிஜிட்டல் ஆப்பரேட்டர்',
+        en: 'CSC Digital Village Operator & e-Services Executive',
+      },
+      localizedDescriptions: {
+        hi: 'गांव में अपना डिजिटल केंद्र खोलकर आधार से पैसे निकालना, सरकारी फॉर्म भरना और ऑनलाइन सेवाएं देने का काम।',
+        bn: 'গ্রামে নিজের ডিজিটাল সেবা কেন্দ্র খুলে আধার বায়োমেট্রিক্সে টাকা তোলা ও অনলাইন পরিষেবার প্রশিক্ষণ।',
+        mr: 'गावामध्ये स्वतःचे डिजिटल सेवा केंद्र सुरू करून आधार पैसे काढणे व फॉर्म भरण्याचे प्रशिक्षण.',
+        ta: 'கிராமத்தில் பொது சேவை மையம் அமைத்து அரசு சேவைகளை வழங்கும் பயிற்சி.',
+        en: 'Rural digital entrepreneurship training managing micro-ATM cash points and citizen government portals.',
+      },
+    };
+
+    const tradeDataEntry: NSQFTrade = {
+      id: 'trade_data_entry',
+      tradeName: 'Domestic Data Entry Operator & Digital Back-Office Executive',
+      nsqfLevel: 4,
+      nsqfQpCode: 'SSC/Q2212',
+      sector: 'IT-ITES & Digital Services',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'High-speed typing, MS Excel data operations, billing, digitized document indexing, and remote/office data entry with verified corporate placements.',
+      durationMonths: 2.5,
+      minEducation: '8th / 10th Pass',
+      expectedMonthlyEarning: '₹15,000 - ₹26,000',
+      activeVacanciesCount: 28,
+      hiringEmployers: ['WNS / Teleperformance BPO', 'Banking CSP & Financial Portals', 'E-Commerce Back-Office (Amazon/Flipkart)', 'Remote Work-From-Home Clients'],
+      keyDuties: [
+        'High-speed typing of textual and numerical data in MS Word and Excel',
+        'Formulas, data filtering, and billing sheet preparation in spreadsheets',
+        'Digitizing physical paper invoices and customer records',
+        'Managing remote work-from-home assignments and corporate email workflows',
+      ],
+      toolsEquipment: [
+        'Laptop / Smartphone, High-Speed Keyboard, MS Office Suite (Excel, Word), Google Workspace, OCR Document Scanner',
+      ],
+      localizedNames: {
+        hi: 'डेटा एंट्री ऑपरेटर व एमएस ऑफिस बैक-ऑफिस (100% ऑनलाइन कोर्स)',
+        bn: 'ডাটা এন্ট্রি অপারেটর ও ডিজিটাল ব্যাক-অফিস সহকারী (অনলাইন কোর্স)',
+        mr: 'डेटा एंट्री ऑपरेटर व एमएस ऑफिस एक्झिक्युटिव्ह (ऑनलाईन कोर्स)',
+        ta: 'டேட்டா என்ட்ரி ஆபரேட்டர் மற்றும் எம்எஸ் ஆபீஸ் பணியாளர் (ஆன்லைன்)',
+        en: 'Domestic Data Entry Operator & Remote Back-Office (Online Course)',
+      },
+      localizedDescriptions: {
+        hi: 'घर बैठे मोबाइल व कंप्यूटर पर टाइपिंग, एमएस एक्सेल, बिलिंग और ऑनलाइन डेटा फीडिंग का 100% ऑनलाइन प्रमाणित कोर्स व रोजगार।',
+        bn: 'ঘরে বসে বা অফিসে কম্পিউটারে দ্রুত টাইপিং, এক্সেল শিট, বিলিং ও সরকারি/বেসরকারি ডাটা এন্ট্রির ১০০% অনলাইন সার্টিফাইড কোর্স ও কাজ।',
+        mr: 'घरी बसून संगणकावर टायपिंग, एक्सेल व डेटा फिडिंगचे काम देणारा १००% ऑनलाईन कोर्स व नोकरी.',
+        ta: 'கணினியில் விரைவாக தட்டச்சு செய்தல், எக்செல் மற்றும் ஆன்லைன் டேட்டா பதிவு செய்யும் சான்றிதழ் படிப்பு.',
+        en: '100% Online certified course for high-speed typing, Excel data sheets, digital invoicing, and remote/office data entry.',
+      },
+    };
+
+    const tradeDigitalMarketing: NSQFTrade = {
+      id: 'trade_digital_marketing',
+      tradeName: 'Digital Marketing, Social Media Manager & E-Commerce Associate',
+      nsqfLevel: 4,
+      nsqfQpCode: 'SSC/Q1001',
+      sector: 'IT-ITES & Creative Media',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'Social media marketing (Instagram Reels, Facebook, YouTube), Google Business ranking, Canva creative banner design, and Amazon/Flipkart product selling.',
+      durationMonths: 3,
+      minEducation: '8th / 10th Pass',
+      expectedMonthlyEarning: '₹18,000 - ₹35,000',
+      activeVacanciesCount: 22,
+      hiringEmployers: ['Digital Marketing & Ad Agencies', 'E-Commerce Brands & D2C Sellers', 'Local Business Clients & Retailers', 'Remote Freelance Consultant'],
+      keyDuties: [
+        'Designing viral banners and video reels using Canva and mobile editor tools',
+        'Running targeted lead-generation ad campaigns on Meta and Google',
+        'Optimizing Google Business profiles for local shops and business clients',
+        'Managing e-commerce catalog listings and customer orders on Amazon/Flipkart',
+      ],
+      toolsEquipment: [
+        'Smartphone / Laptop, Canva Pro, Meta Ads Manager, Google Business Profile, CapCut/VN Video Editor, AI Marketing Tools',
+      ],
+      localizedNames: {
+        hi: 'डिजिटल मार्केटिंग व सोशल मीडिया मैनेजर (100% ऑनलाइन कोर्स)',
+        bn: 'ডিজিটাল মার্কেটিং, সোশ্যাল মিডিয়া ও অনলাইন ব্যবসা সহকারী (অনলাইন কোর্স)',
+        mr: 'डिजिटल मार्केटिंग व सोशल मीडिया मॅनेजर (१००% ऑनलाईन कोर्स)',
+        ta: 'டிஜிட்டல் மார்க்கெட்டிங் மற்றும் சமூக ஊடக மேலாளர் (ஆன்லைன்)',
+        en: 'Digital Marketing & Social Media Associate (Online Course)',
+      },
+      localizedDescriptions: {
+        hi: 'घर बैठे इंस्टाग्राम, फेसबुक, गूगल और फ्लिपकार्ट पर बिजनेस प्रमोट करने, विज्ञापन चलाने और कंपनियों के लिए ऑनलाइन मार्केटिंग करने का कोर्स।',
+        bn: 'ঘরে বসে ফেসবুক রিলস, ইউটিউব, গুগল অ্যাডস ও ই-কমার্সে প্রোডাক্ট বিক্রি ও মার্কেটিংয়ের আধুনিক ১০০% অনলাইন কোর্স ও ক্যারিয়ার।',
+        mr: 'घरी बसून फेसबुक, इन्स्टाग्राम, गुगल जाहिराती आणि ऑनलाईन विक्रीतून उत्पन्न मिळवण्याचा १००% ऑनलाईन कोर्स.',
+        ta: 'இன்ஸ்டாகிராம், பேஸ்புக் மற்றும் கூகுள் மூலம் டிஜிட்டல் முறையில் பொருட்களை விளம்பரம் செய்யும் ஆன்லைன் பயிற்சி.',
+        en: '100% Online certified training covering social media ads, Canva design, Google Business ranking, and e-commerce selling.',
+      },
+    };
+
+    const tradeCOPA: NSQFTrade = {
+      id: 'trade_copa',
+      tradeName: 'Computer Operator & Programming Assistant (COPA) - Web & Python Foundations',
+      nsqfLevel: 4,
+      nsqfQpCode: 'SSC/Q0509',
+      sector: 'IT-ITES & Software Skilling',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'Web development (HTML/CSS/JavaScript), Python programming basics, database handling (SQL), computer hardware/software troubleshooting, and entry-level IT careers.',
+      durationMonths: 3.5,
+      minEducation: '10th / 12th Pass',
+      expectedMonthlyEarning: '₹20,000 - ₹38,000',
+      activeVacanciesCount: 20,
+      hiringEmployers: ['IT Service Providers & Software Agencies', 'EdTech & SaaS Startups', 'Computer Lab Support Units', 'Freelance Coding Portals'],
+      keyDuties: [
+        'Building responsive website layouts using HTML5, CSS3, and modern web tools',
+        'Writing beginner-friendly Python scripts for automation and logic processing',
+        'Executing database queries in SQL to organize information',
+        'Troubleshooting software installations and supporting IT operations',
+      ],
+      toolsEquipment: [
+        'VS Code Editor, Python 3 IDLE, Chrome DevTools, GitHub, MySQL Workbench, Virtual Cloud Coding Sandbox',
+      ],
+      localizedNames: {
+        hi: 'कंप्यूटर ऑपरेटर व वेब/पायथन प्रोग्रामिंग असिस्टेंट (कोपा - ऑनलाइन कोर्स)',
+        bn: 'কম্পিউটার অপারেটর ও ওয়েব/পাইথন প্রোগ্রামিং সহায়ক (কোপা অনলাইন কোর্স)',
+        mr: 'संगणक ऑपरेटर व वेब/पायथन प्रोग्रामिंग असिस्टंट (कोपा ऑनलाईन कोर्स)',
+        ta: 'கணினி ஆபரேட்டர் & இணைய நிரலாக்க உதவியாளர் (கோபா ஆன்லைன்)',
+        en: 'Computer Operator & Programming Assistant (COPA Online Course)',
+      },
+      localizedDescriptions: {
+        hi: 'शुरुआत से कंप्यूटर कोडिंग, वेबसाइट बनाना (HTML/CSS), पायथन प्रोग्रामिंग और आईटी कंपनियों में जूनियर डेवलपर बनने का 100% ऑनलाइन कोर्स।',
+        bn: 'শুরু থেকে কোডিং, ওয়েবসাইট তৈরি (HTML/CSS), পাইথন প্রোগ্রামিং ও আইটি সেক্টরে ক্যারিয়ার গড়ার ১০০% অনলাইন সরকারি প্রশিক্ষণ।',
+        mr: 'सुरुवातीपासून कोडिंग, वेबसाईट बनवणे, पायथन प्रोग्रामिंग व आयटी नोकरीसाठी १००% ऑनलाईन प्रशिक्षण.',
+        ta: 'கணினி குறியீட்டு முறை, வலைத்தள உருவாக்கம் மற்றும் பைதான் நிரலாக்கத்திற்கான ஆன்லைன் படிப்பு.',
+        en: '100% Online technical training covering HTML/CSS web design, Python programming fundamentals, SQL databases, and IT careers.',
+      },
+    };
+
+    const tradeGraphicWeb: NSQFTrade = {
+      id: 'trade_graphic_web',
+      tradeName: 'Graphic Designer, Canva/Photoshop & Digital Content Creator',
+      nsqfLevel: 4,
+      nsqfQpCode: 'MES/Q0601',
+      sector: 'Media & Entertainment / Digital IT',
+      category: 'hybrid',
+      demandLevel: 'High',
+      description: 'Visual communication, Canva Pro banner design, YouTube thumbnails, Instagram reels graphics, logo creation, photo retouching in Photoshop, and freelance client bidding.',
+      durationMonths: 2.5,
+      minEducation: '8th / 10th Pass',
+      expectedMonthlyEarning: '₹16,000 - ₹32,000',
+      activeVacanciesCount: 24,
+      hiringEmployers: ['Digital Media Agencies & Video Houses', 'YouTube Creators & Influencer Teams', 'Flex Banner & Print Presses', 'Freelance Portals (Fiverr/Upwork)'],
+      keyDuties: [
+        'Designing high-converting marketing flyers, posters, and banner ads',
+        'Creating high-CTR YouTube thumbnails and Instagram carousel posts',
+        'Developing corporate branding assets like logos and business cards',
+        'Photo background removal, retouching, and executing freelance client orders',
+      ],
+      toolsEquipment: [
+        'Canva Pro, Adobe Photoshop / Photopea, Figma, VN / CapCut Video Editor, Laptop / Tablet / Smartphone',
+      ],
+      localizedNames: {
+        hi: 'ग्राफिक डिजाइनर व डिजिटल कंटेंट क्रिएटर (कैनवा/फोटोशॉप - ऑनलाइन कोर्स)',
+        bn: 'গ্রাফিক ডিজাইনার ও ডিজিটাল কনটেন্ট ক্রিয়েটর (ক্যানভা/ফটোশপ অনলাইন কোর্স)',
+        mr: 'ग्राफिक डिझायनर व डिजिटल कंटेंट क्रिएटर (कॅनव्हा/फोटोशॉप ऑनलाईन कोर्स)',
+        ta: 'கிராபிக் டிசைனர் மற்றும் டிஜிட்டல் உள்ளடக்க உருவாக்குநர் (ஆன்லைன்)',
+        en: 'Graphic Designer, Canva/Photoshop & Content Creator (Online Course)',
+      },
+      localizedDescriptions: {
+        hi: 'मोबाइल और कंप्यूटर पर कैनवा व फोटोशॉप से यूट्यूब थंबनेल, बैनर, लोगो और सोशल मीडिया डिजाइन बनाकर पैसे कमाने का 100% ऑनलाइन कोर्स।',
+        bn: 'মোবাইল বা ল্যাপটপে ক্যানভা ও ফটোশপে পোস্টার, ব্যানার, লোগো ও ইউটিউব থাম্বনেইল ডিজাইনের মাধ্যমে ঘরে বসে আয়ের ১০০% অনলাইন কোর্স।',
+        mr: 'मोबाईल किंवा लॅपटॉपवर कॅनव्हा व फोटोशॉपद्वारे पोस्टर्स, लोगो व थंबनेल्स डिझाईन करण्याचा १००% ऑनलाईन कोर्स.',
+        ta: 'கேன்வா மற்றும் போட்டோஷாப் மூலம் போஸ்டர்கள், லோகோ மற்றும் யூடியூப் தம்ப்நெயில் உருவாக்கும் ஆன்லைன் படிப்பு.',
+        en: '100% Online certified design training for crafting YouTube thumbnails, social media creatives, brand logos, and freelance projects.',
+      },
+    };
+
+    const tradeRemoteBPO: NSQFTrade = {
+      id: 'trade_remote_bpo',
+      tradeName: 'Customer Care Executive, Remote Telecaller & Work-From-Home Support Associate',
+      nsqfLevel: 4,
+      nsqfQpCode: 'SSC/Q2210',
+      sector: 'IT-ITES & BPO',
+      category: 'wage_employment',
+      demandLevel: 'High',
+      description: 'Voice and non-voice chat customer support, inbound/outbound telecalling for banking and e-commerce, CRM software handling, and work-from-home employment.',
+      durationMonths: 2,
+      minEducation: '10th / 12th Pass',
+      expectedMonthlyEarning: '₹15,000 - ₹28,000',
+      activeVacanciesCount: 30,
+      hiringEmployers: ['Teleperformance / Concentrix BPO Operations', 'Banking & Fintech Remote Support (SBI/PhonePe)', 'E-Commerce Support (Flipkart/Amazon)', 'Remote Healthcare & EdTech Hubs'],
+      keyDuties: [
+        'Politely addressing inbound customer inquiries and issue resolution',
+        'Logging customer interactions in cloud CRM software and ticketing tools',
+        'Conducting outbound informational and promotional telephone calls',
+        'Handling live chat and WhatsApp customer service conversations',
+      ],
+      toolsEquipment: [
+        'Smartphone with Headset / Laptop, Cloud CRM Software (Zoho, Freshdesk), Dialler App, Voice Training Module',
+      ],
+      localizedNames: {
+        hi: 'कस्टमर केयर एग्जीक्यूटिव व वर्क-फ्रॉम-होम टेलीकॉलर (100% ऑनलाइन कोर्स)',
+        bn: 'কাস্টমার কেয়ার এক্সিকিউটিভ ও ওয়ার্ক-ফ্রম-হোম টেলিকলার (অনলাইন কোর্স)',
+        mr: 'कस्टमर केअर एक्झिक्युटिव्ह व वर्क-फ्रॉम-होम टेलिकॉलर (१००% ऑनलाईन कोर्स)',
+        ta: 'வாடிக்கையாளர் சேவை மற்றும் வீட்டிலிருந்தே பணிபுரியும் அழைப்பாளர் (ஆன்லைன்)',
+        en: 'Customer Care Executive & Remote Telecaller (Online Course)',
+      },
+      localizedDescriptions: {
+        hi: 'घर बैठे मोबाइल और हेडसेट से बैंकों व ई-कॉमर्स कंपनियों के ग्राहकों से बात करने, कॉल सपोर्ट और वर्क फ्रॉम होम नौकरी का 100% ऑनलाइन कोर्स।',
+        bn: 'ঘরে বসে মোবাইল ও হেডসেটের সাহায্যে ব্যাংক, অ্যামাজন বা ফ্লিপকার্টের গ্রাহকদের সঙ্গে কথা বলে রিমোট চাকরির ১০০% অনলাইন প্রশিক্ষণ।',
+        mr: 'घरी बसून मोबाईल व हेडसेटवर बँक व ई-कॉमर्स ग्राहकांना कॉल सपोर्ट देणारा व वर्क फ्रॉम होम देणारा १००% ऑनलाईन कोर्स.',
+        ta: 'வீட்டிலிருந்தே மொபைல் மூலம் வாடிக்கையாளர் அழைப்புகளை கையாண்டு பணிபுரியும் ஆன்லைன் பயிற்சி மற்றும் வேலை.',
+        en: '100% Online training for voice/chat customer support, CRM handling, and high-paying work-from-home telecalling careers.',
+      },
+    };
+
+    [
+      tradeElectrician,
+      tradeTailor,
+      tradeSolar,
+      tradeAutomotive,
+      tradeDairy,
+      tradePlumbing,
+      tradeMasonry,
+      tradeWarehouse,
+      tradeGDA,
+      tradeDrone,
+      tradeWelder,
+      tradeCSC,
+      tradeDataEntry,
+      tradeDigitalMarketing,
+      tradeCOPA,
+      tradeGraphicWeb,
+      tradeRemoteBPO,
+    ].forEach((t) => this.trades.set(t.id, t));
+
+    // Seed Training Centers with all updated trade mappings
+    const centerOnline: TrainingCenter = {
+      id: 'center_pmajay_online',
+      name: 'Skill India Digital Hub (SIDH) - PM-AJAY Virtual Academy',
+      district: 'Online / National Portal',
+      state: 'Government of India',
+      address: '100% Online Distance Portal • Access Anywhere in India via Smartphone / Laptop',
+      latitude: 23.18,
+      longitude: 88.58,
+      distanceKm: 0,
+      travelTimeMinutes: 0,
+      offeredTrades: [
+        'trade_data_entry',
+        'trade_digital_marketing',
+        'trade_copa',
+        'trade_graphic_web',
+        'trade_remote_bpo',
+        'trade_csc',
+      ],
+      nextBatchDate: 'Immediate Start (Self-Paced & Live Daily Batches)',
+      seatsAvailable: 150,
+      totalSeats: 250,
+      hostelAvailable: false,
+      stipendSupport: true,
+      contactNumber: 'Toll Free: 1800 123 9626',
+    };
+
+    const centerNadia: TrainingCenter = {
+      id: 'center_pmajay_nadia',
+      name: 'PM-AJAY Mega Skill Development Center (Ranaghat)',
+      district: 'Nadia',
+      state: 'West Bengal',
+      address: 'Near Block Development Office, Ranaghat II, Nadia - 741201',
+      latitude: 23.18,
+      longitude: 88.58,
+      distanceKm: 8.4,
+      travelTimeMinutes: 22,
+      offeredTrades: [
+        'trade_electrician',
+        'trade_tailor',
+        'trade_solar',
+        'trade_auto',
+        'trade_plumbing',
+        'trade_masonry',
+        'trade_warehouse',
+        'trade_gda',
+        'trade_drone',
+        'trade_welder',
+        'trade_csc',
+        'trade_data_entry',
+        'trade_digital_marketing',
+        'trade_copa',
+        'trade_graphic_web',
+        'trade_remote_bpo',
+      ],
+      nextBatchDate: '12 September',
+      seatsAvailable: 35,
+      totalSeats: 60,
+      hostelAvailable: true,
+      stipendSupport: true,
+      contactNumber: '+91 94340 12890',
+    };
+
+    const centerBurdwan: TrainingCenter = {
+      id: 'center_pmajay_burdwan',
+      name: 'PM-AJAY Rural Livelihood Center (Kalna)',
+      district: 'Purba Bardhaman',
+      state: 'West Bengal',
+      address: 'Station Road, Kalna Subdivision, Bardhaman - 713409',
+      latitude: 23.22,
+      longitude: 88.36,
+      distanceKm: 5.2,
+      travelTimeMinutes: 15,
+      offeredTrades: [
+        'trade_tailor',
+        'trade_dairy',
+        'trade_auto',
+        'trade_electrician',
+        'trade_plumbing',
+        'trade_masonry',
+        'trade_csc',
+      ],
+      nextBatchDate: '15 September',
+      seatsAvailable: 24,
+      totalSeats: 45,
+      hostelAvailable: false,
+      stipendSupport: true,
+      contactNumber: '+91 98320 44512',
+    };
+
+    const centerPune: TrainingCenter = {
+      id: 'center_pmajay_pune',
+      name: 'PM-AJAY Kaushalya Vikas Kendra (Baramati)',
+      district: 'Pune',
+      state: 'Maharashtra',
+      address: 'MIDC Industrial Training Area, Baramati, Pune - 413133',
+      latitude: 18.15,
+      longitude: 74.58,
+      distanceKm: 7.8,
+      travelTimeMinutes: 20,
+      offeredTrades: [
+        'trade_electrician',
+        'trade_auto',
+        'trade_solar',
+        'trade_warehouse',
+        'trade_welder',
+        'trade_drone',
+      ],
+      nextBatchDate: '10 September',
+      seatsAvailable: 28,
+      totalSeats: 50,
+      hostelAvailable: true,
+      stipendSupport: true,
+      contactNumber: '+91 97650 33411',
+    };
+
+    const centerMadurai: TrainingCenter = {
+      id: 'center_pmajay_madurai',
+      name: 'PM-AJAY Skill Training Institute (Usilampatti)',
+      district: 'Madurai',
+      state: 'Tamil Nadu',
+      address: 'Taluk Office Road, Usilampatti, Madurai - 625532',
+      latitude: 9.97,
+      longitude: 77.79,
+      distanceKm: 6.5,
+      travelTimeMinutes: 18,
+      offeredTrades: [
+        'trade_electrician',
+        'trade_tailor',
+        'trade_dairy',
+        'trade_solar',
+        'trade_plumbing',
+        'trade_gda',
+      ],
+      nextBatchDate: '18 September',
+      seatsAvailable: 22,
+      totalSeats: 40,
+      hostelAvailable: true,
+      stipendSupport: true,
+      contactNumber: '+91 94430 88762',
+    };
+
+    const centerVaranasi: TrainingCenter = {
+      id: 'center_pmajay_varanasi',
+      name: 'PM-AJAY Gramin Kaushal Kendra (Sevapuri)',
+      district: 'Varanasi',
+      state: 'Uttar Pradesh',
+      address: 'Block HQ, Sevapuri, Varanasi - 221403',
+      latitude: 25.32,
+      longitude: 82.85,
+      distanceKm: 6.1,
+      travelTimeMinutes: 16,
+      offeredTrades: [
+        'trade_electrician',
+        'trade_tailor',
+        'trade_solar',
+        'trade_dairy',
+        'trade_masonry',
+        'trade_welder',
+        'trade_csc',
+      ],
+      nextBatchDate: '12 September',
+      seatsAvailable: 30,
+      totalSeats: 50,
+      hostelAvailable: true,
+      stipendSupport: true,
+      contactNumber: '+91 94500 22391',
+    };
+
+    [centerOnline, centerNadia, centerBurdwan, centerPune, centerMadurai, centerVaranasi].forEach((c) =>
+      this.centers.set(c.id, c)
+    );
+
+    // Seed Sample Beneficiary & Active Enrollment Progress for Demo
+    const sampleCandidate: Candidate = {
+      id: 'cand_demo_01',
+      name: 'Sunil Mondal',
+      phone: '+91 98765 43210',
+      district: 'Nadia',
+      state: 'West Bengal',
+      gender: 'Male',
+      age: 23,
+      createdAt: '2026-08-10T10:00:00Z',
+    };
+    this.candidates.set(sampleCandidate.id, sampleCandidate);
+
+    const sampleProgress: EnrollmentProgress = {
+      id: 'prog_demo_01',
+      candidateId: sampleCandidate.id,
+      tradeId: 'trade_electrician',
+      centerId: 'center_pmajay_nadia',
+      currentStage: 'in_training_60',
+      percentComplete: 60,
+      confirmedDate: '12 Aug',
+      trainingStartDate: '18 Aug',
+      certificationStatus: 'in_progress',
+      employmentStatus: 'upcoming',
+      history: [
+        {
+          stage: 'interest_confirmed',
+          title: 'Interest Confirmed',
+          date: '10 Aug',
+          completed: true,
+          note: 'Voice intake completed in Bengali. Trade selected: Electrician & Solar.',
+        },
+        {
+          stage: 'enrollment_confirmed',
+          title: 'Enrollment Confirmed (Zero Fee)',
+          date: '12 Aug',
+          completed: true,
+          note: 'Batch 14 assigned at Ranaghat PM-AJAY Center. 100% GIA grant applied.',
+        },
+        {
+          stage: 'training_started',
+          title: 'Practical Training Started',
+          date: '18 Aug',
+          completed: true,
+          note: 'Safety gear and tool kit distributed to beneficiary.',
+        },
+        {
+          stage: 'in_training_60',
+          title: '60% Course Completed',
+          date: '28 Aug',
+          completed: true,
+          note: 'Completed domestic wiring, circuit breakers, and earthing modules.',
+        },
+        {
+          stage: 'certification',
+          title: 'NSQF Assessment & Certification',
+          date: '15 Sep (Upcoming)',
+          completed: false,
+          note: 'Sector Skill Council theoretical and practical assessment.',
+        },
+        {
+          stage: 'employment_placed',
+          title: 'Job Placement / Enterprise Setup',
+          date: '25 Sep (Upcoming)',
+          completed: false,
+          note: 'Placement interview with State Power Discom contractors and Toolkit handover.',
+        },
+      ],
+    };
+    this.progress.set(sampleCandidate.id, sampleProgress);
+  }
+
+  public recordAuditLog(
+    adminId: string,
+    adminName: string,
+    action: string,
+    targetEntity: string,
+    targetId: string,
+    details: string
+  ) {
+    const log: AuditLog = {
+      id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      timestamp: new Date().toISOString(),
+      adminId,
+      adminName,
+      action,
+      targetEntity,
+      targetId,
+      details,
+    };
+    this.auditLogs.unshift(log);
+    if (this.auditLogs.length > 500) {
+      this.auditLogs.pop();
+    }
+  }
+}
+
+export const db = new Database();
+export default db;

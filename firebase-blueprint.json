@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "UserProfile": {
+      "collection": "users",
+      "fields": {
+        "id": { "type": "string", "description": "User UID from Firebase Auth" },
+        "email": { "type": "string", "description": "Email address" },
+        "displayName": { "type": "string", "description": "Display name or beneficiary name" },
+        "photoURL": { "type": "string", "description": "Avatar URL" },
+        "role": { "type": "string", "description": "User role: candidate, surveyor, admin" },
+        "phoneNumber": { "type": "string", "description": "Phone number" },
+        "district": { "type": "string", "description": "District in West Bengal or other state" },
+        "createdAt": { "type": "string", "description": "Creation timestamp ISO" },
+        "lastLoginAt": { "type": "string", "description": "Last login timestamp ISO" }
+      }
+    },
+    "CandidateRecord": {
+      "collection": "candidates",
+      "fields": {
+        "id": { "type": "string", "description": "Candidate ID" },
+        "userId": { "type": "string", "description": "Owner user UID if linked" },
+        "name": { "type": "string", "description": "Candidate name" },
+        "phone": { "type": "string", "description": "Phone number" },
+        "district": { "type": "string", "description": "District name" },
+        "state": { "type": "string", "description": "State name" },
+        "createdAt": { "type": "string", "description": "Creation timestamp ISO" }
+      }
+    },
+    "InterviewSession": {
+      "collection": "sessions",
+      "fields": {
+        "id": { "type": "string", "description": "Session ID" },
+        "userId": { "type": "string", "description": "Owner user UID" },
+        "candidateId": { "type": "string", "description": "Candidate ID" },
+        "language": { "type": "string", "description": "Language code: hi, bn, mr, ta, en" },
+        "currentStepIndex": { "type": "number", "description": "Current step number" },
+        "totalSteps": { "type": "number", "description": "Total steps" },
+        "status": { "type": "string", "description": "in_progress, completed" },
+        "transcript": { "type": "array", "description": "Interview conversational turns" },
+        "createdAt": { "type": "string", "description": "Created at ISO" },
+        "updatedAt": { "type": "string", "description": "Updated at ISO" }
+      }
+    }
+  }
+}
